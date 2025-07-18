@@ -6,7 +6,7 @@ const mosqueContSchema = new mongoose.Schema(
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "Flat",
 		},
-		month: {
+		date: {
 			type: Date,
 		},
 		amount: {

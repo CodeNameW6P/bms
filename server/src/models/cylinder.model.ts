@@ -9,7 +9,7 @@ const cylinderSchema = new mongoose.Schema(
 		date: {
 			type: Date,
 		},
-		amount: {
+		numberOfCylinder: {
 			type: Number,
 		},
 		dealer: {

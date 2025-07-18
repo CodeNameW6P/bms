@@ -3,17 +3,17 @@ import Flat from "../models/flat.model";
 
 export const createFlat = async (req: Request, res: Response) => {
 	try {
-		const { building, number, owner, phone, email, status } = req.body;
-		if (!building || !number) {
+		const { building, flatNumber, owner, phone, email, status } = req.body;
+		if (!building || !flatNumber) {
 			res.status(400).json({ message: "Building and flat number are required" });
 			return;
 		}
-		const existingFlat = await Flat.findOne({ number, building });
+		const existingFlat = await Flat.findOne({ flatNumber, building });
 		if (existingFlat) {
 			res.status(400).json({ message: "Flat already exists in the building" });
 			return;
 		}
-		const newFlat = await Flat.create({ building, number, owner, phone, email, status });
+		const newFlat = await Flat.create({ building, flatNumber, owner, phone, email, status });
 		res.status(201).json(newFlat);
 	} catch (error: any) {
 		console.error("Error creating flat:", error.message);
@@ -37,12 +37,12 @@ export const getFlats = async (req: Request, res: Response) => {
 
 export const getFlat = async (req: Request, res: Response) => {
 	try {
-		const { number } = req.params;
-		if (!number) {
+		const { flatNumber } = req.params;
+		if (!flatNumber) {
 			res.status(400).json({ message: "Flat number is required" });
 			return;
 		}
-		const flat = await Flat.findOne({ number }).populate("building");
+		const flat = await Flat.findOne({ flatNumber }).populate("building");
 		if (!flat) {
 			res.status(404).json({ message: "Flat not found" });
 			return;
@@ -56,15 +56,17 @@ export const getFlat = async (req: Request, res: Response) => {
 
 export const updateFlat = async (req: Request, res: Response) => {
 	try {
-		const { number } = req.params;
+		const { flatNumber } = req.params;
 		const { owner, phone, email, status } = req.body;
-		if (!number) {
+		if (!flatNumber) {
 			res.status(400).json({ message: "Flat number is required" });
 			return;
 		}
-		const flat = await Flat.findOneAndUpdate({ number }, { owner, phone, email, status }, { new: true }).populate(
-			"building"
-		);
+		const flat = await Flat.findOneAndUpdate(
+			{ flatNumber },
+			{ owner, phone, email, status },
+			{ new: true }
+		).populate("building");
 		if (!flat) {
 			res.status(404).json({ message: "Flat not found" });
 			return;
@@ -78,12 +80,12 @@ export const updateFlat = async (req: Request, res: Response) => {
 
 export const deleteFlat = async (req: Request, res: Response) => {
 	try {
-		const { number } = req.params;
-		if (!number) {
+		const { flatNumber } = req.params;
+		if (!flatNumber) {
 			res.status(400).json({ message: "Flat number is required" });
 			return;
 		}
-		const flat = await Flat.findOneAndDelete({ number });
+		const flat = await Flat.findOneAndDelete({ flatNumber });
 		if (!flat) {
 			res.status(404).json({ message: "Flat not found" });
 			return;

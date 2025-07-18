@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Loader2Icon } from "lucide-react";
 import {
 	Card,
 	CardAction,
@@ -29,7 +30,17 @@ const AdminSignInSchema = z.object({
 
 const SignInPage: React.FC = () => {
 	const navigate = useNavigate();
+	useEffect(() => {
+		axios.get("http://localhost:8000/api/auth/adminauth", { withCredentials: true }).then((response) => {
+			navigate("/admin-dashboard");
+		});
+		axios.get("http://localhost:8000/api/auth/flatauth", { withCredentials: true }).then((response) => {
+			navigate("/flat-dashboard");
+		});
+	}, [navigate]);
+
 	const [isFlatSignIn, setIsFlatSignIn] = useState(true);
+	const [isFormLoading, setIsFormLoading] = useState(false);
 
 	const flatForm = useForm({
 		resolver: zodResolver(FlatSignInSchema),
@@ -48,31 +59,60 @@ const SignInPage: React.FC = () => {
 	});
 
 	const handleFlatSignIn = (data: z.infer<typeof FlatSignInSchema>) => {
-		console.log("Flat Sign In Data:", data);
-		// Handle flat sign-in logic here, e.g., API call to verify flat resident
+		setIsFormLoading((prev) => (prev = true));
+		try {
+			axios
+				.post("http://localhost:8000/api/auth/flatsignin", data, {
+					withCredentials: true,
+				})
+				.then((response) => {
+					console.log("Flat signed in successfully:", response.data);
+					navigate("/flat-dashboard");
+				})
+				.catch((error) => {
+					console.error("Error signing in flat:", error.response?.data || error.message);
+					flatForm.setError("root", {
+						message: error.response?.data?.message || "Failed to sign in",
+					});
+				});
+		} catch (error: any) {
+			console.error("Error during flat sign-in:", error.message);
+			flatForm.setError("root", {
+				message: "Internal server error",
+			});
+		}
+		setIsFormLoading((prev) => (prev = false));
 	};
 
 	const handleAdminSignIn = (data: z.infer<typeof AdminSignInSchema>) => {
-		console.log("Admin Sign In Data:", data);
-		axios
-			.post("http://localhost:8000/api/auth/adminsignin", data, {
-				withCredentials: true,
-			})
-			.then((response) => {
-				console.log("Admin signed in successfully:", response.data);
-				navigate("/admin-dashboard");
-			})
-			.catch((error) => {
-				console.error("Error signing in admin:", error.response?.data || error.message);
-				adminForm.setError("root", {
-					message: error.response?.data?.message || "Failed to sign in",
+		setIsFormLoading((prev) => (prev = true));
+		try {
+			axios
+				.post("http://localhost:8000/api/auth/adminsignin", data, {
+					withCredentials: true,
+				})
+				.then((response) => {
+					console.log("Admin signed in successfully:", response.data);
+					navigate("/admin-dashboard");
+				})
+				.catch((error) => {
+					console.error("Error signing in admin:", error.response?.data || error.message);
+					adminForm.setError("root", {
+						message: error.response?.data?.message || "Failed to sign in",
+					});
 				});
+		} catch (error: any) {
+			console.error("Error during admin sign-in:", error.message);
+			adminForm.setError("root", {
+				message: "Internal server error",
 			});
+		}
+		setIsFormLoading((prev) => (prev = false));
 	};
 
 	return (
 		<>
-			<div className="flex items-center justify-center min-h-screen">
+			<div className="flex flex-col grow justify-center items-center">
 				<Card className="w-full max-w-md">
 					<CardHeader>
 						<CardTitle className="">
@@ -95,7 +135,11 @@ const SignInPage: React.FC = () => {
 					<CardContent>
 						{isFlatSignIn ? (
 							<Form {...flatForm}>
-								<form onSubmit={flatForm.handleSubmit(handleFlatSignIn)} className="space-y-4">
+								<form
+									onSubmit={flatForm.handleSubmit(handleFlatSignIn)}
+									className="space-y-4"
+									method=""
+								>
 									<FormField
 										control={flatForm.control}
 										name="flatNumber"
@@ -122,8 +166,8 @@ const SignInPage: React.FC = () => {
 											</FormItem>
 										)}
 									/>
-									<Button type="submit" className="w-full">
-										Sign In
+									<Button type="submit" className="w-full" disabled={isFormLoading}>
+										{isFormLoading ? <Loader2Icon className="animate-spin" /> : "Sign In"}
 									</Button>
 								</form>
 							</Form>
@@ -156,14 +200,27 @@ const SignInPage: React.FC = () => {
 											</FormItem>
 										)}
 									/>
-									<Button type="submit" className="w-full">
-										Sign In
+									<Button type="submit" className="w-full" disabled={isFormLoading}>
+										{isFormLoading ? <Loader2Icon className="animate-spin" /> : "Sign In"}
 									</Button>
 								</form>
 							</Form>
 						)}
 					</CardContent>
-					<CardFooter></CardFooter>
+					{adminForm.formState.errors.root && (
+						<CardFooter>
+							<span className="text-red-500 text-sm text-center w-full">
+								{adminForm.formState.errors.root.message}
+							</span>
+						</CardFooter>
+					)}
+					{flatForm.formState.errors.root && (
+						<CardFooter>
+							<span className="text-red-500 text-sm text-center w-full">
+								{flatForm.formState.errors.root.message}
+							</span>
+						</CardFooter>
+					)}
 				</Card>
 			</div>
 		</>

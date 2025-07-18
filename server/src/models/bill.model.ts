@@ -2,17 +2,17 @@ import mongoose from "mongoose";
 
 const billSchema = new mongoose.Schema(
 	{
-		month: {
+		date: {
 			type: Date,
 		},
 		flat: {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "Flat",
 		},
-		billTotal: {
+		totalAmount: {
 			type: Number,
 		},
-		billPaid: {
+		paidAmount: {
 			type: Number,
 		},
 		status: {

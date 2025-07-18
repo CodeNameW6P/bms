@@ -9,10 +9,10 @@ const gasUsageSchema = new mongoose.Schema(
 		date: {
 			type: Date,
 		},
-		unitCost: {
+		unitUsed: {
 			type: Number,
 		},
-		unitUsed: {
+		unitCost: {
 			type: Number,
 		},
 		totalCost: {

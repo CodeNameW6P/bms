@@ -5,6 +5,19 @@ import { genSalt, hash, compare } from "bcrypt";
 import { generateToken } from "../config/jwt";
 import { NODE_ENV } from "../config/env";
 
+export const adminAuthResponse = async (req: any, res: Response) => {
+	try {
+		if (!req.admin) {
+			res.status(401).json({ message: "Unauthorized - Admin wasn't found" });
+			return;
+		}
+		res.status(200).json({ message: "Admin authenticated" });
+	} catch (error: any) {
+		console.error("Error during admin authentication response:", error.message);
+		res.status(500).json({ message: "Internal server error" });
+	}
+};
+
 export const adminSignUp = async (req: Request, res: Response) => {
 	try {
 		const { username, email, password } = req.body;
@@ -88,6 +101,19 @@ export const adminSignOut = (req: Request, res: Response) => {
 		res.clearCookie("token").status(200).json({ message: "Admin signed out successfully" });
 	} catch (error: any) {
 		console.error("Error during admin sign-out:", error.message);
+		res.status(500).json({ message: "Internal server error" });
+	}
+};
+
+export const flatAuthResponse = async (req: any, res: Response) => {
+	try {
+		if (!req.flat) {
+			res.status(401).json({ message: "Unauthorized - Flat wasn't found" });
+			return;
+		}
+		res.status(200).json({ message: "Flat resident authenticated" });
+	} catch (error: any) {
+		console.error("Error during flat authentication response:", error.message);
 		res.status(500).json({ message: "Internal server error" });
 	}
 };
