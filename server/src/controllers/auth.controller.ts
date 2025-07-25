@@ -5,7 +5,7 @@ import { genSalt, hash, compare } from "bcrypt";
 import { generateToken } from "../config/jwt";
 import { NODE_ENV } from "../config/env";
 
-export const adminAuthResponse = async (req: any, res: Response) => {
+export const adminAuthCheck = async (req: any, res: Response) => {
 	try {
 		if (!req.admin) {
 			res.status(401).json({ message: "Unauthorized - Admin wasn't found" });
@@ -105,7 +105,7 @@ export const adminSignOut = (req: Request, res: Response) => {
 	}
 };
 
-export const flatAuthResponse = async (req: any, res: Response) => {
+export const flatAuthCheck = async (req: any, res: Response) => {
 	try {
 		if (!req.flat) {
 			res.status(401).json({ message: "Unauthorized - Flat wasn't found" });

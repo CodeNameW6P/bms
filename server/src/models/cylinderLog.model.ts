@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const cylinderSchema = new mongoose.Schema(
+const cylinderLogSchema = new mongoose.Schema(
 	{
 		building: {
 			type: mongoose.Schema.Types.ObjectId,
@@ -9,7 +9,7 @@ const cylinderSchema = new mongoose.Schema(
 		date: {
 			type: Date,
 		},
-		numberOfCylinder: {
+		cylindersPurchased: {
 			type: Number,
 		},
 		dealer: {
@@ -25,5 +25,5 @@ const cylinderSchema = new mongoose.Schema(
 	{ timestamps: true }
 );
 
-const Cylinder = mongoose.models.Cylinder || mongoose.model("Cylinder", cylinderSchema);
-export default Cylinder;
+const CylinderLog = mongoose.models.CylinderLog || mongoose.model("CylinderLog", cylinderLogSchema);
+export default CylinderLog;

@@ -9,39 +9,31 @@ const FlatDashPage: React.FC = () => {
 
 	useEffect(() => {
 		const flatAuthCheck = () => {
-			try {
-				axios
-					.get("http://localhost:8000/api/auth/flatauth", { withCredentials: true })
-					.then((response) => {
-						setLoading((prev) => (prev = false));
-					})
-					.catch((error) => {
-						console.error("Probably unauthorized:", error);
-						navigate("/sign-in");
-					});
-			} catch (error: any) {
-				console.error("Error during flat authentication check:", error.message);
-				navigate("/sign-in");
-			}
+			axios
+				.get("http://localhost:8000/api/auth/flat-auth-check", { withCredentials: true })
+				.then((response) => {
+					console.log(response.data);
+					setLoading((prev) => (prev = false));
+				})
+				.catch((error) => {
+					console.error("Flat resident unauthorized or failed to check flat authentication:", error);
+					navigate("/sign-in");
+				});
 		};
 
 		flatAuthCheck();
 	}, [navigate]);
 
 	const handleSignOut = () => {
-		try {
-			axios
-				.post("http://localhost:8000/api/auth/flatsignout", {}, { withCredentials: true })
-				.then((response) => {
-					console.log("Signed out successfully:", response.data);
-					navigate("/sign-in");
-				})
-				.catch((error) => {
-					console.error("Error signing out:", error);
-				});
-		} catch (error: any) {
-			console.error("Error during flat sign-out:", error.message);
-		}
+		axios
+			.post("http://localhost:8000/api/auth/flat-sign-out", {}, { withCredentials: true })
+			.then((response) => {
+				console.log("Signed out successfully:", response.data);
+				navigate("/sign-in");
+			})
+			.catch((error) => {
+				console.error("Error signing out:", error);
+			});
 	};
 
 	return (

@@ -18,41 +18,32 @@ const AdminDashPage: React.FC = () => {
 	const [loading, setLoading] = useState(true);
 	const navigate = useNavigate();
 
-	// useEffect(() => {
-	// 	const adminAuthCheck = () => {
-	// 		try {
-	// 			axios
-	// 				.get("http://localhost:8000/api/auth/adminauth", { withCredentials: true })
-	// 				.then((response) => {
-	// 					setLoading((prev) => (prev = false));
-	// 				})
-	// 				.catch((error) => {
-	// 					console.error("Probably unauthorized:", error);
-	// 					navigate("/sign-in");
-	// 				});
-	// 		} catch (error: any) {
-	// 			console.error("Error during admin authentication check:", error.message);
-	// 			navigate("/sign-in");
-	// 		}
-	// 	};
-
-	// 	adminAuthCheck();
-	// }, [navigate]);
-
-	const handleSignOut = () => {
-		try {
+	useEffect(() => {
+		const adminAuthCheck = () => {
 			axios
-				.post("http://localhost:8000/api/auth/adminsignout", {}, { withCredentials: true })
+				.get("http://localhost:8000/api/auth/admin-auth-check", { withCredentials: true })
 				.then((response) => {
-					console.log("Signed out successfully:", response.data);
-					navigate("/sign-in");
+					// console.log("Admin authenticated successfully", response.data);
 				})
 				.catch((error) => {
-					console.error("Error signing out:", error);
+					// console.error("Unauthorized or error authenticating admin", error);
+					navigate("/sign-in");
 				});
-		} catch (error: any) {
-			console.error("Error during admin sign-out:", error.message);
-		}
+		};
+
+		adminAuthCheck();
+	}, [navigate]);
+
+	const handleSignOut = () => {
+		axios
+			.post("http://localhost:8000/api/auth/admin-sign-out", {}, { withCredentials: true })
+			.then((response) => {
+				// console.log("Signed out successfully:", response.data);
+				navigate("/sign-in");
+			})
+			.catch((error) => {
+				console.error("Error signing out:", error);
+			});
 	};
 
 	return (

@@ -4,15 +4,18 @@
 // import "./App.css";
 import { Routes, Route, Link } from "react-router-dom";
 import { Button } from "./components/ui/button";
+import { Toaster } from "./components/ui/sonner";
 import SignInPage from "./pages/SignInPage";
 import AdminDashPage from "./pages/AdminDashPage";
 import FlatDashPage from "./pages/FlatDashPage";
+import ManageBillPage from "./pages/ManageBillPage";
+import ManageCylinderPage from "./pages/ManageCylinderPage";
 
 function App() {
 	return (
 		<>
 			<div className="flex flex-col min-h-screen">
-				<header className="flex items-center justify-between bg-gray-800 text-white p-4">
+				<header className="flex items-center justify-between bg-black text-white p-4">
 					<Link to="/">
 						<h1 className="text-2xl font-semibold">Navana City Dale Portal</h1>
 					</Link>
@@ -36,6 +39,7 @@ function App() {
 						</ul>
 					</nav>
 				</header>
+				<Toaster />
 				<main className="flex container mx-auto p-4 grow">
 					<Routes>
 						<Route path="/" element={<h2 className="text-xl">Welcome to the Navana City Dale Portal</h2>} />
@@ -44,9 +48,11 @@ function App() {
 						<Route path="/sign-in" element={<SignInPage />} />
 						<Route path="/admin-dashboard" element={<AdminDashPage />} />
 						<Route path="/flat-dashboard" element={<FlatDashPage />} />
+						<Route path="/manage-bill" element={<ManageBillPage />} />
+						<Route path="/manage-cylinder" element={<ManageCylinderPage />} />
 					</Routes>
 				</main>
-				<footer className="bg-gray-800 text-white p-4 text-center">
+				<footer className="bg-black text-white p-4 text-center">
 					<span className="text-sm">
 						&copy; {new Date().getFullYear()} Navana City Dale Portal. All rights reserved.
 					</span>
