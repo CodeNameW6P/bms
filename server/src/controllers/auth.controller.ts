@@ -111,7 +111,7 @@ export const flatAuthCheck = async (req: any, res: Response) => {
 			res.status(401).json({ message: "Unauthorized - Flat wasn't found" });
 			return;
 		}
-		res.status(200).json({ message: "Flat resident authenticated" });
+		res.status(200).json(req.flat);
 	} catch (error: any) {
 		console.error("Error during flat authentication response:", error.message);
 		res.status(500).json({ message: "Internal server error" });

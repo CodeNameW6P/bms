@@ -1,22 +1,16 @@
 import { Request, Response } from "express";
 import Bill from "../models/bill.model";
-import Flat from "../models/flat.model";
 
 export const createBill = async (req: Request, res: Response) => {
 	try {
-		const { date, flatNumber, totalAmount } = req.body;
-		if (!date || !flatNumber || !totalAmount) {
-			res.status(400).json({ message: "Flat number, date and amount are required" });
-			return;
-		}
-		const flat = await Flat.findOne({ flatNumber: flatNumber }).select("_id");
-		if (!flat) {
-			res.status(404).json({ message: "Flat wasn't found" });
+		const { date, flat, totalAmount } = req.body;
+		if (!date || !flat || !totalAmount) {
+			res.status(400).json({ message: "Flat, date and amount are required" });
 			return;
 		}
 		const bill = await Bill.create({
 			date: new Date(date),
-			flat: flat._id,
+			flat,
 			totalAmount,
 			paidAmount: 0,
 			status: false,
@@ -28,6 +22,21 @@ export const createBill = async (req: Request, res: Response) => {
 	}
 };
 
+export const uploadBills = async (req: Request, res: Response) => {
+	try {
+		const { data } = req.body;
+		if (!data || data.length === 0 || !Array.isArray(data)) {
+			res.status(400).json({ message: "Data is invalid or missing" });
+		}
+
+		const bills = await Bill.insertMany(data);
+		res.status(201).json({ message: "Bills have been created", count: bills.length });
+	} catch (error: any) {
+		console.error("Error creating bills:", error.message);
+		res.status(500).json({ message: "Internal server error" });
+	}
+};
+
 export const getBills = async (req: Request, res: Response) => {
 	try {
 		const bills = await Bill.find().populate("flat").sort({ date: -1 });
@@ -35,6 +44,36 @@ export const getBills = async (req: Request, res: Response) => {
 			res.status(404).json({ message: "No bills found" });
 			return;
 		}
+		res.status(200).json(bills);
+	} catch (error: any) {
+		console.error("Error fetching bills:", error.message);
+		res.status(500).json({ message: "Internal server error" });
+	}
+};
+
+export const getFlatBills = async (req: Request, res: Response) => {
+	try {
+		const { flatId } = req.params;
+		if (!flatId) {
+			res.status(400).json({ message: "Flat ID is required" });
+			return;
+		}
+		const bills = await Bill.find({ flat: flatId }).populate("flat").sort({ date: -1 });
+		res.status(200).json(bills);
+	} catch (error: any) {
+		console.error("Error fetching bills:", error.message);
+		res.status(500).json({ message: "Internal server error" });
+	}
+};
+
+export const getFlatUnpaidBills = async (req: Request, res: Response) => {
+	try {
+		const { flatId } = req.params;
+		if (!flatId) {
+			res.status(400).json({ message: "Flat ID is required" });
+			return;
+		}
+		const bills = await Bill.find({ flat: flatId, status: false }).populate("flat").sort({ date: -1 });
 		res.status(200).json(bills);
 	} catch (error: any) {
 		console.error("Error fetching bills:", error.message);
