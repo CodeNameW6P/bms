@@ -17,6 +17,7 @@ const flatSchema = new mongoose.Schema(
 		},
 		ownerPhone: {
 			type: String,
+			required: true,
 		},
 		ownerEmail: {
 			type: String,
@@ -30,12 +31,15 @@ const flatSchema = new mongoose.Schema(
 		renterEmail: {
 			type: String,
 		},
-		isOccupied: {
+		status: {
 			type: Boolean,
+			default: false,
 		},
 	},
 	{ timestamps: true }
 );
+
+flatSchema.index({ building: 1, flatNumber: 1 }, { unique: true });
 
 const Flat = mongoose.models.Flat || mongoose.model("Flat", flatSchema);
 export default Flat;

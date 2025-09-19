@@ -10,7 +10,7 @@ const router = Router();
 
 router.post("/", createBuilding);
 router.get("/", getBuildings);
-router.get("/:number", getBuilding);
-router.delete("/:number", deleteBuilding);
+router.get("/:id", getBuilding);
+router.delete("/:id", deleteBuilding);
 
 export default router;

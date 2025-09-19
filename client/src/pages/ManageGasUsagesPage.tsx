@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
 	Select,
 	SelectContent,
@@ -46,21 +47,22 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import * as xlsx from "xlsx";
 import HeaderAdmin from "@/components/HeaderAdmin";
 import Footer from "@/components/Footer";
-import * as xlsx from "xlsx";
-import { fetchBuildingsApi } from "@/api/buildingApi";
 import { adminAuthCheckApi } from "@/api/authApi";
+import { fetchBuildingsApi } from "@/api/buildingApi";
 import { fetchBuildingFlatsApi } from "@/api/flatApi";
 import {
-	createContributionApi,
-	createMultipleContributionsApi,
-	fetchBuildingContributionsApi,
-	updateContributionApi,
-	deleteContributionApi,
-} from "@/api/contributionApi";
+	createGasUsageApi,
+	createMultipleGasUsagesApi,
+	fetchBuildingGasUsagesApi,
+	updateGasUsageApi,
+	// updateMultipleGasUsagesApi,
+	deleteGasUsageApi,
+} from "@/api/gasUsageApi";
 
-const CreateContributionSchema = z.object({
+const CreateGasUsageSchema = z.object({
 	flatId: z.string("Flat can't be anything other than a string").nonempty("Please select a flat"),
 	month: z
 		.string("Month can't be anything other than a string")
@@ -68,26 +70,37 @@ const CreateContributionSchema = z.object({
 	year: z
 		.number("Year can't be anything other than a number")
 		.gte(2020, "You're going too far back in the past"),
-	amount: z
-		.number("Amount can't be anything other than a number")
-		.nonnegative("Amount can't be negative"),
+	unitReadout: z
+		.number("Unit readout can't be anything other than a number")
+		.nonnegative("Unit readout can't be negative"),
+	unitCost: z
+		.number("Unit cost can't be anything other than a number")
+		.nonnegative("Unit cost can't be negative"),
 });
 
-const CreateMultipleContributionsSchema = CreateContributionSchema.pick({
+const CreateMultipleGasUsagesSchema = CreateGasUsageSchema.pick({
 	month: true,
 	year: true,
+	unitCost: true,
 });
 
-export type CreateContributionData = z.infer<typeof CreateContributionSchema>;
-type CreateMultipleContributionsData = z.infer<typeof CreateMultipleContributionsSchema>;
+const EditGasUsageForm = CreateGasUsageSchema.extend({
+	billPaid: z
+		.number("Bill paid can't be anything other than a number")
+		.nonnegative("Bill paid can't be negative"),
+});
 
-const ManageMosqueContributionsPage: React.FC = () => {
+export type CreateGasUsageData = z.infer<typeof CreateGasUsageSchema>;
+type CreateMultipleGasUsagesData = z.infer<typeof CreateMultipleGasUsagesSchema>;
+type EditGasUsageData = z.infer<typeof EditGasUsageForm>;
+
+const ManageGasUsagesPage: React.FC = () => {
 	const [isPageLoading, setIsPageLoading] = useState(true);
 	const [isFormLoading, setIsFormLoading] = useState(false);
 	const [buildings, setBuildings] = useState([]);
 	const [currentBuildingId, setCurrentBuildingId] = useState<string | null>(null);
 	const [flats, setFlats] = useState([]);
-	const [contributions, setContributions] = useState([]);
+	const [gasUsages, setGasUsages] = useState([]);
 	const [file, setFile] = useState<File | null>(null);
 	const [fileInputError, setFileInputError] = useState<string | null>(null);
 	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -99,21 +112,23 @@ const ManageMosqueContributionsPage: React.FC = () => {
 	const [tableFilters, setTableFilters] = useState({
 		starting: currentDate.toISOString().slice(0, 7),
 		ending: currentDate.toISOString().slice(0, 7),
+		status: "all",
 	});
 	const navigate = useNavigate();
 
-	const fetchBuildingContributions = async () => {
-		const response = await fetchBuildingContributionsApi(
+	const fetchBuildingGasUsages = async () => {
+		const response = await fetchBuildingGasUsagesApi(
 			currentBuildingId as string,
 			tableFilters.starting,
-			tableFilters.ending
+			tableFilters.ending,
+			tableFilters.status
 		);
 		if (response.success) {
-			setContributions(response.data);
+			setGasUsages(response.data);
 		} else {
-			toast("Failed to fetch building contributions", {
+			toast("Failed to fetch building gas usage records", {
 				description:
-					response.error || "Some error is preventing contributions from being fetched",
+					response.error || "Some error is preventing records from being fetched",
 				action: {
 					label: "OK",
 					onClick: () => {},
@@ -185,12 +200,12 @@ const ManageMosqueContributionsPage: React.FC = () => {
 
 		if (currentBuildingId) {
 			fetchBuildingFlats();
-			fetchBuildingContributions();
+			fetchBuildingGasUsages();
 		}
 	}, [currentBuildingId]);
 
-	const createContributionForm = useForm<CreateContributionData>({
-		resolver: zodResolver(CreateContributionSchema),
+	const createGasUsageForm = useForm<CreateGasUsageData>({
+		resolver: zodResolver(CreateGasUsageSchema),
 		mode: "onSubmit",
 		defaultValues: {
 			flatId: "",
@@ -199,45 +214,44 @@ const ManageMosqueContributionsPage: React.FC = () => {
 		},
 	});
 
-	const createMultipleContributionsForm = useForm<CreateMultipleContributionsData>({
-		resolver: zodResolver(CreateMultipleContributionsSchema),
+	const createMultipleGasUsagesForm = useForm<CreateMultipleGasUsagesData>({
+		resolver: zodResolver(CreateMultipleGasUsagesSchema),
 		defaultValues: {
 			month: `${currentDate.getMonth() + 1}`,
 			year: currentDate.getFullYear(),
 		},
 	});
 
-	const editContributionForm = useForm<CreateContributionData>({
-		resolver: zodResolver(CreateContributionSchema),
-		mode: "onSubmit",
+	const editGasUsageForm = useForm<EditGasUsageData>({
+		resolver: zodResolver(EditGasUsageForm),
 		defaultValues: {
 			flatId: "",
 			month: "",
 		},
 	});
 
-	const handleCreateContribution = async (formData: CreateContributionData) => {
+	const handleCreateGasUsage = async (formData: CreateGasUsageData) => {
 		setIsFormLoading(true);
-		const response = await createContributionApi(formData);
+		const response = await createGasUsageApi(formData);
 		if (response.success) {
-			fetchBuildingContributions();
-			toast("Contribution has been created", {
+			fetchBuildingGasUsages();
+			toast("Record has been created", {
 				description: "Check the table for more options",
 				action: {
 					label: "OK",
 					onClick: () => {},
 				},
 			});
-			createContributionForm.reset();
+			createGasUsageForm.reset();
 		} else {
-			createContributionForm.setError("root", {
-				message: response.error || "Failed to create contribution",
+			createGasUsageForm.setError("root", {
+				message: response.error || "Failed to create gas usage record",
 			});
 		}
 		setIsFormLoading(false);
 	};
 
-	const handleCreateMultipleContributions = async (formData: CreateMultipleContributionsData) => {
+	const handleCreateMultipleGasUsages = async (formData: CreateMultipleGasUsagesData) => {
 		setIsFormLoading(true);
 		setFileInputError(null);
 
@@ -264,7 +278,7 @@ const ManageMosqueContributionsPage: React.FC = () => {
 		const sheetData = xlsx.utils.sheet_to_json(worksheet);
 
 		const data = sheetData.map((entry: any, index) => {
-			if (!entry.flatId || !entry.flatNumber || !entry.amount) {
+			if (!entry.flatId || !entry.flatNumber || !entry.unitReadout) {
 				setFileInputError(`Row ${index + 1} has missing data`);
 				setIsFormLoading(false);
 				return;
@@ -283,13 +297,14 @@ const ManageMosqueContributionsPage: React.FC = () => {
 				flatId: entry.flatId,
 				month: formData.month,
 				year: formData.year,
-				amount: entry.amount || 0,
+				unitCost: formData.unitCost,
+				unitReadout: entry.unitReadout || 0,
 			};
 		});
 
-		const response = await createMultipleContributionsApi({ data: data });
+		const response = await createMultipleGasUsagesApi({ data: data });
 		if (response.success) {
-			fetchBuildingContributions();
+			fetchBuildingGasUsages();
 			toast(response.data.message, {
 				description: "Check the table for more options",
 				action: {
@@ -297,22 +312,22 @@ const ManageMosqueContributionsPage: React.FC = () => {
 					onClick: () => {},
 				},
 			});
-			createMultipleContributionsForm.reset();
+			createMultipleGasUsagesForm.reset();
 			setFile(null);
 		} else {
-			createMultipleContributionsForm.setError("root", {
+			createMultipleGasUsagesForm.setError("root", {
 				message: response.error || "Failed to upload data",
 			});
 		}
 		setIsFormLoading(false);
 	};
 
-	const handleEditContribution = async (id: string, formData: CreateContributionData) => {
+	const handleEditGasUsage = async (id: string, formData: EditGasUsageData) => {
 		setIsFormLoading(true);
-		const response = await updateContributionApi(id, formData);
+		const response = await updateGasUsageApi(id, formData);
 		if (response.success) {
-			fetchBuildingContributions();
-			toast("Contribution has been edited", {
+			fetchBuildingGasUsages();
+			toast("Record has been edited", {
 				description: "Check the table for more options",
 				action: {
 					label: "OK",
@@ -320,20 +335,20 @@ const ManageMosqueContributionsPage: React.FC = () => {
 				},
 			});
 			setIsEditDialogOpen(false);
-			editContributionForm.reset();
+			editGasUsageForm.reset();
 		} else {
-			editContributionForm.setError("root", {
-				message: response.error || "Failed to edit contribution",
+			editGasUsageForm.setError("root", {
+				message: response.error || "Failed to edit record",
 			});
 		}
 		setIsFormLoading(false);
 	};
 
-	const handleDeleteContribution = async (id: string) => {
-		const response = await deleteContributionApi(id);
+	const handleDeleteGasUsage = async (id: string) => {
+		const response = await deleteGasUsageApi(id);
 		if (response.success) {
-			fetchBuildingContributions();
-			toast("Contribution has been deleted", {
+			fetchBuildingGasUsages();
+			toast("Record has been deleted", {
 				description: "Check the table for more options",
 				action: {
 					label: "OK",
@@ -342,9 +357,8 @@ const ManageMosqueContributionsPage: React.FC = () => {
 			});
 			setIsDeleteDialogOpen(false);
 		} else {
-			toast("Failed to delete contribution", {
-				description:
-					response.error || "Some error is preventing contribution from being deleted",
+			toast("Failed to delete record", {
+				description: response.error || "Some error is preventing record from being deleted",
 				action: {
 					label: "OK",
 					onClick: () => {},
@@ -354,7 +368,7 @@ const ManageMosqueContributionsPage: React.FC = () => {
 	};
 
 	const handleDownloadSpreadsheet = () => {
-		if (!contributions || contributions.length === 0) {
+		if (!gasUsages || gasUsages.length === 0) {
 			toast("Can't let you download a spreadsheet", {
 				description: "There aren't any data to make a spreadsheet out of",
 				action: {
@@ -365,12 +379,17 @@ const ManageMosqueContributionsPage: React.FC = () => {
 			return;
 		}
 
-		const data = contributions.map((item: any) => ({
-			"Mosque Contribution ID": item._id,
-			"Flat Number": item.flat.flatNumber,
-			Month: MONTHS[item.month - 1],
-			Year: item.year,
-			Amount: item.amount,
+		const data = gasUsages.map((gasUsage: any) => ({
+			"Gas Usage Record ID": gasUsage._id,
+			"Flat Number": gasUsage.flat.flatNumber,
+			Month: MONTHS[gasUsage.month - 1],
+			Year: gasUsage.year,
+			"Unit Readout": gasUsage.unitReadout,
+			"Units Used": gasUsage.unitsUsed,
+			Bill: gasUsage.billTotal,
+			"Paid Bill": gasUsage.billPaid,
+			"Remaining Bill": gasUsage.billTotal - gasUsage.billPaid,
+			Status: gasUsage.status ? "Paid" : "Unpaid",
 		}));
 
 		const worksheet = xlsx.utils.json_to_sheet(data);
@@ -378,7 +397,7 @@ const ManageMosqueContributionsPage: React.FC = () => {
 		xlsx.utils.book_append_sheet(workbook, worksheet, "Gas usage records");
 		xlsx.writeFile(
 			workbook,
-			`service_charges_f-${tableFilters.starting}_t-${tableFilters.ending}.xlsx`
+			`gas_usage_records_f-${tableFilters.starting}_t-${tableFilters.ending}_s-${tableFilters.status}.xlsx`
 		);
 	};
 
@@ -388,7 +407,7 @@ const ManageMosqueContributionsPage: React.FC = () => {
 				<HeaderAdmin />
 				<Card className="flex grow container mx-auto">
 					<CardHeader>
-						<CardTitle className="text-2xl">Manage Mosque Contributions</CardTitle>
+						<CardTitle className="text-2xl">Manage Gas Usage Records</CardTitle>
 						<CardDescription>
 							Please make sure all information is correct before proceeding
 						</CardDescription>
@@ -425,18 +444,16 @@ const ManageMosqueContributionsPage: React.FC = () => {
 							<TabsContent value="individual">
 								<form
 									className="flex flex-col gap-6"
-									onSubmit={createContributionForm.handleSubmit(
-										handleCreateContribution
-									)}
+									onSubmit={createGasUsageForm.handleSubmit(handleCreateGasUsage)}
 									action=""
 									method=""
 								>
 									<div className="flex flex-col gap-2">
 										<Label htmlFor="flatId">Flat</Label>
 										<Select
-											value={createContributionForm.watch("flatId")}
+											value={createGasUsageForm.watch("flatId")}
 											onValueChange={(value) =>
-												createContributionForm.setValue("flatId", value)
+												createGasUsageForm.setValue("flatId", value)
 											}
 											defaultValue=""
 										>
@@ -454,21 +471,18 @@ const ManageMosqueContributionsPage: React.FC = () => {
 												</SelectGroup>
 											</SelectContent>
 										</Select>
-										{createContributionForm.formState.errors.flatId && (
+										{createGasUsageForm.formState.errors.flatId && (
 											<span className="text-xs text-red-500 font-semibold">
-												{
-													createContributionForm.formState.errors.flatId
-														.message
-												}
+												{createGasUsageForm.formState.errors.flatId.message}
 											</span>
 										)}
 									</div>
 									<div className="flex flex-col gap-2">
 										<Label htmlFor="month">Month</Label>
 										<Select
-											value={createContributionForm.watch("month")}
+											value={createGasUsageForm.watch("month")}
 											onValueChange={(value) =>
-												createContributionForm.setValue("month", value)
+												createGasUsageForm.setValue("month", value)
 											}
 											defaultValue=""
 										>
@@ -489,12 +503,9 @@ const ManageMosqueContributionsPage: React.FC = () => {
 												</SelectGroup>
 											</SelectContent>
 										</Select>
-										{createContributionForm.formState.errors.month && (
+										{createGasUsageForm.formState.errors.month && (
 											<span className="text-xs text-red-500 font-semibold">
-												{
-													createContributionForm.formState.errors.month
-														.message
-												}
+												{createGasUsageForm.formState.errors.month.message}
 											</span>
 										)}
 									</div>
@@ -502,31 +513,46 @@ const ManageMosqueContributionsPage: React.FC = () => {
 										<Label htmlFor="year">Year</Label>
 										<Input
 											type="number"
-											{...createContributionForm.register("year", {
+											{...createGasUsageForm.register("year", {
 												valueAsNumber: true,
 											})}
 										/>
-										{createContributionForm.formState.errors.year && (
+										{createGasUsageForm.formState.errors.year && (
+											<span className="text-xs text-red-500 font-semibold">
+												{createGasUsageForm.formState.errors.year.message}
+											</span>
+										)}
+									</div>
+									<div className="flex flex-col gap-2">
+										<Label htmlFor="unitReadout">Unit Readout</Label>
+										<Input
+											type="number"
+											{...createGasUsageForm.register("unitReadout", {
+												valueAsNumber: true,
+											})}
+										/>
+										{createGasUsageForm.formState.errors.unitReadout && (
 											<span className="text-xs text-red-500 font-semibold">
 												{
-													createContributionForm.formState.errors.year
+													createGasUsageForm.formState.errors.unitReadout
 														.message
 												}
 											</span>
 										)}
 									</div>
 									<div className="flex flex-col gap-2">
-										<Label htmlFor="amount">Amount</Label>
+										<Label htmlFor="unitCost">Unit Cost</Label>
 										<Input
 											type="number"
-											{...createContributionForm.register("amount", {
+											step="0.01"
+											{...createGasUsageForm.register("unitCost", {
 												valueAsNumber: true,
 											})}
 										/>
-										{createContributionForm.formState.errors.amount && (
+										{createGasUsageForm.formState.errors.unitCost && (
 											<span className="text-xs text-red-500 font-semibold">
 												{
-													createContributionForm.formState.errors.amount
+													createGasUsageForm.formState.errors.unitCost
 														.message
 												}
 											</span>
@@ -535,9 +561,9 @@ const ManageMosqueContributionsPage: React.FC = () => {
 									<Button type="submit" disabled={isFormLoading}>
 										{isFormLoading ? "Loading..." : "Create"}
 									</Button>
-									{createContributionForm.formState.errors.root && (
+									{createGasUsageForm.formState.errors.root && (
 										<span className="text-red-500 text-center">
-											{createContributionForm.formState.errors.root.message}
+											{createGasUsageForm.formState.errors.root.message}
 										</span>
 									)}
 								</form>
@@ -545,8 +571,8 @@ const ManageMosqueContributionsPage: React.FC = () => {
 							<TabsContent value="multiple">
 								<form
 									className="flex flex-col gap-6"
-									onSubmit={createMultipleContributionsForm.handleSubmit(
-										handleCreateMultipleContributions
+									onSubmit={createMultipleGasUsagesForm.handleSubmit(
+										handleCreateMultipleGasUsages
 									)}
 									action=""
 									method=""
@@ -554,12 +580,9 @@ const ManageMosqueContributionsPage: React.FC = () => {
 									<div className="flex flex-col gap-2">
 										<Label htmlFor="month">Month</Label>
 										<Select
-											value={createMultipleContributionsForm.watch("month")}
+											value={createMultipleGasUsagesForm.watch("month")}
 											onValueChange={(value) =>
-												createMultipleContributionsForm.setValue(
-													"month",
-													value
-												)
+												createMultipleGasUsagesForm.setValue("month", value)
 											}
 											defaultValue=""
 										>
@@ -580,10 +603,10 @@ const ManageMosqueContributionsPage: React.FC = () => {
 												</SelectGroup>
 											</SelectContent>
 										</Select>
-										{createMultipleContributionsForm.formState.errors.month && (
+										{createMultipleGasUsagesForm.formState.errors.month && (
 											<span className="text-xs text-red-500 font-semibold">
 												{
-													createMultipleContributionsForm.formState.errors
+													createMultipleGasUsagesForm.formState.errors
 														.month.message
 												}
 											</span>
@@ -593,15 +616,33 @@ const ManageMosqueContributionsPage: React.FC = () => {
 										<Label htmlFor="year">Year</Label>
 										<Input
 											type="number"
-											{...createContributionForm.register("year", {
+											{...createMultipleGasUsagesForm.register("year", {
 												valueAsNumber: true,
 											})}
 										/>
-										{createContributionForm.formState.errors.year && (
+										{createMultipleGasUsagesForm.formState.errors.year && (
 											<span className="text-xs text-red-500 font-semibold">
 												{
-													createContributionForm.formState.errors.year
-														.message
+													createMultipleGasUsagesForm.formState.errors
+														.year.message
+												}
+											</span>
+										)}
+									</div>
+									<div className="flex flex-col gap-2">
+										<Label htmlFor="unitCost">Unit Cost</Label>
+										<Input
+											type="number"
+											step="0.01"
+											{...createMultipleGasUsagesForm.register("unitCost", {
+												valueAsNumber: true,
+											})}
+										/>
+										{createMultipleGasUsagesForm.formState.errors.unitCost && (
+											<span className="text-xs text-red-500 font-semibold">
+												{
+													createMultipleGasUsagesForm.formState.errors
+														.unitCost.message
 												}
 											</span>
 										)}
@@ -628,11 +669,11 @@ const ManageMosqueContributionsPage: React.FC = () => {
 									<Button type="submit" disabled={isFormLoading}>
 										{isFormLoading ? "Loading..." : "Create"}
 									</Button>
-									{createMultipleContributionsForm.formState.errors.root && (
+									{createMultipleGasUsagesForm.formState.errors.root && (
 										<span className="text-red-500 text-center">
 											{
-												createMultipleContributionsForm.formState.errors
-													.root.message
+												createMultipleGasUsagesForm.formState.errors.root
+													.message
 											}
 										</span>
 									)}
@@ -641,7 +682,7 @@ const ManageMosqueContributionsPage: React.FC = () => {
 						</Tabs>
 						<Card className="">
 							<CardHeader>
-								<CardTitle className="">Mosque Contribution Table</CardTitle>
+								<CardTitle className="">Gas Usage Record Table</CardTitle>
 								<CardDescription>
 									From {tableFilters.ending} | To {tableFilters.starting}
 								</CardDescription>
@@ -653,53 +694,95 @@ const ManageMosqueContributionsPage: React.FC = () => {
 										Filters
 									</Button>
 									<Button
-										onClick={() => fetchBuildingContributions()}
+										onClick={() => fetchBuildingGasUsages()}
 										variant={"outline"}
 									>
 										Refresh
 									</Button>
 								</CardAction>
 							</CardHeader>
-							<CardContent>
+							<CardContent className="">
 								<Table>
 									<TableCaption>
-										{contributions.length > 0
-											? `${contributions.length} Mosque Contribution(s)`
+										{gasUsages.length > 0
+											? `${gasUsages.length} Gas Usage Record(s)`
 											: "No Data"}
 									</TableCaption>
 									<TableHeader>
 										<TableRow className="bg-muted">
-											<TableHead>Mosque Contribution ID</TableHead>
+											<TableHead>Gas Usage Record ID</TableHead>
 											<TableHead>Flat Number</TableHead>
 											<TableHead>Month</TableHead>
 											<TableHead>Year</TableHead>
-											<TableHead className="text-right">Amount</TableHead>
+											<TableHead className="text-right">
+												Unit Readout
+											</TableHead>
+											<TableHead className="text-right">Unit Cost</TableHead>
+											<TableHead className="text-right">Units Used</TableHead>
+											<TableHead className="text-right">Total Bill</TableHead>
+											<TableHead className="text-right">Paid Bill</TableHead>
+											<TableHead className="text-right">
+												Remaining Bill
+											</TableHead>
+											<TableHead className="text-center">Status</TableHead>
 											<TableHead className="text-center">Action</TableHead>
 										</TableRow>
 									</TableHeader>
 									<TableBody>
-										{contributions.map((contribution: any, index) => (
+										{gasUsages.map((gasUsage: any, index) => (
 											<TableRow key={index}>
-												<TableCell>{contribution._id}</TableCell>
-												<TableCell>
-													{contribution.flat.flatNumber}
-												</TableCell>
-												<TableCell>
-													{MONTHS[contribution.month - 1]}
-												</TableCell>
-												<TableCell>{contribution.year}</TableCell>
+												<TableCell>{gasUsage._id}</TableCell>
+												<TableCell>{gasUsage.flat.flatNumber}</TableCell>
+												<TableCell>{MONTHS[gasUsage.month - 1]}</TableCell>
+												<TableCell>{gasUsage.year}</TableCell>
 												<TableCell className="text-right">
-													{contribution.amount.toLocaleString("en-IN")}
+													{gasUsage.unitReadout.toLocaleString("en-IN")}
+												</TableCell>
+												<TableCell className="text-right">
+													{gasUsage.unitCost.toLocaleString("en-IN")}
+												</TableCell>
+												<TableCell className="text-right">
+													{gasUsage.unitsUsed.toLocaleString("en-IN")}
+												</TableCell>
+												<TableCell className="text-right">
+													{gasUsage.billTotal.toLocaleString("en-IN")}
+												</TableCell>
+												<TableCell className="text-right">
+													{gasUsage.billPaid.toLocaleString("en-IN")}
+												</TableCell>
+												<TableCell className="text-right">
+													{(
+														gasUsage.billTotal - gasUsage.billPaid
+													).toLocaleString("en-IN")}
+												</TableCell>
+												<TableCell className="text-center">
+													{gasUsage.status ? (
+														<Badge
+															className="bg-green-500 rounded-xs"
+															variant={"default"}
+														>
+															Paid
+														</Badge>
+													) : (
+														<Badge
+															className="bg-red-500 rounded-xs"
+															variant={"default"}
+														>
+															Unpaid
+														</Badge>
+													)}
 												</TableCell>
 												<TableCell className="flex flex-row justify-center gap-4 font-semibold">
 													<button
 														onClick={() => {
-															setEditingId(contribution._id);
-															editContributionForm.reset({
-																flatId: contribution.flat._id,
-																month: `${contribution.month}`,
-																year: contribution.year,
-																amount: contribution.amount,
+															setEditingId(gasUsage._id);
+															editGasUsageForm.reset({
+																flatId: gasUsage.flat._id,
+																month: `${gasUsage.month}`,
+																year: gasUsage.year,
+																unitReadout: gasUsage.unitReadout,
+																unitCost: gasUsage.unitCost,
+																billPaid: gasUsage.billPaid,
 															});
 															setIsEditDialogOpen(true);
 														}}
@@ -709,7 +792,7 @@ const ManageMosqueContributionsPage: React.FC = () => {
 													</button>
 													<button
 														onClick={() => {
-															setDeletingId(contribution._id);
+															setDeletingId(gasUsage._id);
 															setIsDeleteDialogOpen(true);
 														}}
 														className="hover:underline cursor-pointer"
@@ -724,36 +807,26 @@ const ManageMosqueContributionsPage: React.FC = () => {
 								<Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
 									<DialogContent className="">
 										<DialogHeader>
-											<DialogTitle className="">
-												Edit Mosque Contribution
-											</DialogTitle>
+											<DialogTitle className="">Edit Record</DialogTitle>
 											<DialogDescription>
 												Please make sure all information is correct before
 												proceeding
 											</DialogDescription>
 										</DialogHeader>
 										<form
-											className="flex flex-col gap-6 mt-2"
-											onSubmit={editContributionForm.handleSubmit(
-												(formData) => {
-													handleEditContribution(
-														editingId as string,
-														formData
-													);
-												}
-											)}
+											className="flex flex-col gap-6"
+											onSubmit={editGasUsageForm.handleSubmit((formData) => {
+												handleEditGasUsage(editingId as string, formData);
+											})}
 											action=""
 											method=""
 										>
 											<div className="flex flex-col gap-2">
-												<Label htmlFor="flat">Flat</Label>
+												<Label htmlFor="flatId">Flat</Label>
 												<Select
-													value={editContributionForm.watch("flatId")}
+													value={editGasUsageForm.watch("flatId")}
 													onValueChange={(value) =>
-														editContributionForm.setValue(
-															"flatId",
-															value
-														)
+														editGasUsageForm.setValue("flatId", value)
 													}
 													defaultValue=""
 												>
@@ -774,11 +847,11 @@ const ManageMosqueContributionsPage: React.FC = () => {
 														</SelectGroup>
 													</SelectContent>
 												</Select>
-												{editContributionForm.formState.errors.flatId && (
+												{editGasUsageForm.formState.errors.flatId && (
 													<span className="text-xs text-red-500 font-semibold">
 														{
-															editContributionForm.formState.errors
-																.flatId.message
+															editGasUsageForm.formState.errors.flatId
+																.message
 														}
 													</span>
 												)}
@@ -786,12 +859,9 @@ const ManageMosqueContributionsPage: React.FC = () => {
 											<div className="flex flex-col gap-2">
 												<Label htmlFor="month">Month</Label>
 												<Select
-													value={editContributionForm.watch("month")}
+													value={editGasUsageForm.watch("month")}
 													onValueChange={(value) =>
-														editContributionForm.setValue(
-															"month",
-															value
-														)
+														editGasUsageForm.setValue("month", value)
 													}
 													defaultValue=""
 												>
@@ -812,11 +882,11 @@ const ManageMosqueContributionsPage: React.FC = () => {
 														</SelectGroup>
 													</SelectContent>
 												</Select>
-												{editContributionForm.formState.errors.month && (
+												{editGasUsageForm.formState.errors.month && (
 													<span className="text-xs text-red-500 font-semibold">
 														{
-															editContributionForm.formState.errors
-																.month.message
+															editGasUsageForm.formState.errors.month
+																.message
 														}
 													</span>
 												)}
@@ -825,47 +895,80 @@ const ManageMosqueContributionsPage: React.FC = () => {
 												<Label htmlFor="year">Year</Label>
 												<Input
 													type="number"
-													{...editContributionForm.register("year", {
+													{...editGasUsageForm.register("year", {
 														valueAsNumber: true,
 													})}
 												/>
-												{editContributionForm.formState.errors.year && (
+												{editGasUsageForm.formState.errors.year && (
 													<span className="text-xs text-red-500 font-semibold">
 														{
-															editContributionForm.formState.errors
-																.year.message
+															editGasUsageForm.formState.errors.year
+																.message
 														}
 													</span>
 												)}
 											</div>
 											<div className="flex flex-col gap-2">
-												<Label htmlFor="amount">Amount</Label>
+												<Label htmlFor="unitReadout">Unit Readout</Label>
 												<Input
 													type="number"
-													{...editContributionForm.register("amount", {
+													{...editGasUsageForm.register("unitReadout", {
 														valueAsNumber: true,
 													})}
 												/>
-												{editContributionForm.formState.errors.amount && (
+												{editGasUsageForm.formState.errors.unitReadout && (
 													<span className="text-xs text-red-500 font-semibold">
 														{
-															editContributionForm.formState.errors
-																.amount.message
+															editGasUsageForm.formState.errors
+																.unitReadout.message
+														}
+													</span>
+												)}
+											</div>
+											<div className="flex flex-col gap-2">
+												<Label htmlFor="unitCost">Unit Cost</Label>
+												<Input
+													type="number"
+													step="0.01"
+													{...editGasUsageForm.register("unitCost", {
+														valueAsNumber: true,
+													})}
+												/>
+												{editGasUsageForm.formState.errors.unitCost && (
+													<span className="text-xs text-red-500 font-semibold">
+														{
+															editGasUsageForm.formState.errors
+																.unitCost.message
+														}
+													</span>
+												)}
+											</div>
+											<div className="flex flex-col gap-2">
+												<Label htmlFor="billPaid">Bill Paid</Label>
+												<Input
+													type="number"
+													step="0.01"
+													{...editGasUsageForm.register("billPaid", {
+														valueAsNumber: true,
+													})}
+												/>
+												{editGasUsageForm.formState.errors.billPaid && (
+													<span className="text-xs text-red-500 font-semibold">
+														{
+															editGasUsageForm.formState.errors
+																.billPaid.message
 														}
 													</span>
 												)}
 											</div>
 											<Button type="submit" disabled={isFormLoading}>
-												{isFormLoading ? "Loading..." : "Save Changes"}
+												{isFormLoading ? "Loading..." : "Create"}
 											</Button>
 										</form>
-										{editContributionForm.formState.errors.root && (
+										{editGasUsageForm.formState.errors.root && (
 											<DialogFooter>
-												<span className="text-red-500 text-center w-full">
-													{
-														editContributionForm.formState.errors.root
-															.message
-													}
+												<span className="text-red-500 text-center">
+													{editGasUsageForm.formState.errors.root.message}
 												</span>
 											</DialogFooter>
 										)}
@@ -877,9 +980,7 @@ const ManageMosqueContributionsPage: React.FC = () => {
 								>
 									<DialogContent>
 										<DialogHeader>
-											<DialogTitle className="">
-												Delete mosque contribution?
-											</DialogTitle>
+											<DialogTitle className="">Delete record?</DialogTitle>
 											<DialogDescription>
 												Once you delete, this action can't be undone
 											</DialogDescription>
@@ -895,7 +996,7 @@ const ManageMosqueContributionsPage: React.FC = () => {
 											</DialogClose>
 											<Button
 												onClick={() =>
-													handleDeleteContribution(deletingId as string)
+													handleDeleteGasUsage(deletingId as string)
 												}
 											>
 												Delete
@@ -942,6 +1043,34 @@ const ManageMosqueContributionsPage: React.FC = () => {
 													}
 												/>
 											</div>
+											<div className="flex flex-col gap-2">
+												<Label htmlFor="status">Status</Label>
+												<Select
+													value={tableFilters.status}
+													onValueChange={(value) =>
+														setTableFilters((prev) => ({
+															...prev,
+															status: value,
+														}))
+													}
+												>
+													<SelectTrigger className="w-full">
+														<SelectValue placeholder="Select month" />
+													</SelectTrigger>
+													<SelectContent>
+														<SelectGroup>
+															<SelectLabel>Status</SelectLabel>
+															<SelectItem value="all">All</SelectItem>
+															<SelectItem value="true">
+																Paid
+															</SelectItem>
+															<SelectItem value="false">
+																Unpaid
+															</SelectItem>
+														</SelectGroup>
+													</SelectContent>
+												</Select>
+											</div>
 										</div>
 										<DialogFooter className="flex gap-4">
 											<DialogClose asChild>
@@ -954,7 +1083,7 @@ const ManageMosqueContributionsPage: React.FC = () => {
 											</DialogClose>
 											<Button
 												onClick={() => {
-													fetchBuildingContributions();
+													fetchBuildingGasUsages();
 													setIsFilterDialogOpen(false);
 												}}
 											>
@@ -964,16 +1093,16 @@ const ManageMosqueContributionsPage: React.FC = () => {
 									</DialogContent>
 								</Dialog>
 							</CardContent>
+							<CardFooter>
+								<Button
+									disabled={!gasUsages || gasUsages.length === 0}
+									onClick={handleDownloadSpreadsheet}
+								>
+									Download Spreadsheet
+								</Button>
+							</CardFooter>
 						</Card>
 					</CardContent>
-					<CardFooter>
-						<Button
-							disabled={!contributions || contributions.length === 0}
-							onClick={handleDownloadSpreadsheet}
-						>
-							Download Spreadsheet
-						</Button>
-					</CardFooter>
 				</Card>
 				<Footer />
 			</main>
@@ -981,4 +1110,4 @@ const ManageMosqueContributionsPage: React.FC = () => {
 	);
 };
 
-export default ManageMosqueContributionsPage;
+export default ManageGasUsagesPage;

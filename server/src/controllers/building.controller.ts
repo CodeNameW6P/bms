@@ -15,8 +15,8 @@ export const createBuilding = async (req: Request, res: Response) => {
 			return;
 		}
 
-		const newBuilding = await Building.create({ buildingNumber, name });
-		res.status(201).json(newBuilding);
+		const building = await Building.create({ buildingNumber, name });
+		res.status(201).json(building);
 	} catch (error: any) {
 		console.error("Error creating building:", error.message);
 		res.status(500).json({ message: "Internal server error" });
@@ -35,15 +35,15 @@ export const getBuildings = async (req: Request, res: Response) => {
 
 export const getBuilding = async (req: Request, res: Response) => {
 	try {
-		const { buildingNumber } = req.params;
-		if (!buildingNumber) {
-			res.status(400).json({ message: "Building number is required" });
+		const { id } = req.params;
+		if (!id) {
+			res.status(400).json({ message: "Building ID is required" });
 			return;
 		}
 
-		const building = await Building.findOne({ buildingNumber });
+		const building = await Building.findById(id);
 		if (!building) {
-			res.status(404).json({ message: "Couldn't find any building with this number" });
+			res.status(404).json({ message: "Couldn't find any building with this ID" });
 			return;
 		}
 
@@ -56,15 +56,15 @@ export const getBuilding = async (req: Request, res: Response) => {
 
 export const deleteBuilding = async (req: Request, res: Response) => {
 	try {
-		const { buildingNumber } = req.params;
-		if (!buildingNumber) {
-			res.status(400).json({ message: "Building number is required" });
+		const { id } = req.params;
+		if (!id) {
+			res.status(400).json({ message: "Building ID is required" });
 			return;
 		}
 
-		const building = await Building.findOneAndDelete({ buildingNumber });
+		const building = await Building.findByIdAndDelete(id);
 		if (!building) {
-			res.status(404).json({ message: "Couldn't find any building with this number" });
+			res.status(404).json({ message: "Couldn't find any building with this ID" });
 			return;
 		}
 

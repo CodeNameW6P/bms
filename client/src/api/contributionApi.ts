@@ -1,38 +1,22 @@
 import api from "@/lib/axios";
 import type { CreateContributionData } from "@/pages/ManageMosqueContributionsPage";
 
-export const fetchContributionsApi = async (page: number, limit: number, all: boolean) => {
-	try {
-		const response = await api.get(`/contributions?page=${page}&limit=${limit}&all=${all}`);
-		// console.log("Contributions fetched successfully:", response.data);
-		return { success: true, data: response.data };
-	} catch (error: any) {
-		console.error("Error fetching contributions:", error.response?.data);
-		return {
-			success: false,
-			error: error.response?.data?.message || "Failed to fetch contributions",
-		};
-	}
-};
-
-export const fetchCurrentFlatContributionApi = async (flatId: string) => {
-	try {
-		const response = await api.get(`/contributions/flat/current/${flatId}`);
-		// console.log("Current contribution fetched successfully:", response.data);
-		return { success: true, data: response.data };
-	} catch (error: any) {
-		console.error("Error fetching current contribution:", error.response?.data);
-		return {
-			success: false,
-			error: error.response?.data?.message || "Failed to fetch contributions",
-		};
-	}
-};
-
 export const createContributionApi = async (data: CreateContributionData) => {
 	try {
-		const response = await api.post("contributions/create", data);
-		// console.log("Contribution created successfully:", response.data);
+		const response = await api.post("contributions/", data);
+		return { success: true, data: response.data };
+	} catch (error: any) {
+		console.error("Error creating contribution:", error.response?.data);
+		return {
+			success: false,
+			error: error.response?.data?.message || "Failed to create contribution",
+		};
+	}
+};
+
+export const createMultipleContributionsApi = async (data: any) => {
+	try {
+		const response = await api.post("contributions/multiple", data);
 		return { success: true, data: response.data };
 	} catch (error: any) {
 		console.error("Error creating contributions:", error.response?.data);
@@ -43,33 +27,66 @@ export const createContributionApi = async (data: CreateContributionData) => {
 	}
 };
 
-export const updateContributionApi = async (
-	contributionId: string,
-	data: CreateContributionData
+export const fetchBuildingContributionsApi = async (
+	buildingId: string,
+	starting: string,
+	ending: string
 ) => {
 	try {
-		const response = await api.put(`contributions/${contributionId}`, data);
-		// console.log("Contribution updated successfully:", response.data);
+		const response = await api.get(
+			`/contributions/building/${buildingId}?starting=${starting}&ending=${ending}`
+		);
 		return { success: true, data: response.data };
 	} catch (error: any) {
-		console.error("Error updating contributions:", error.response?.data);
+		console.error("Error fetching contributions:", error.response?.data);
 		return {
 			success: false,
-			error: error.response?.data?.message || "Failed to update contributions",
+			error: error.response?.data?.message || "Failed to fetch contributions",
 		};
 	}
 };
 
-export const deleteContributionApi = async (contributionId: string) => {
+export const fetchFlatContributionsApi = async (
+	flatId: string,
+	starting: string,
+	ending: string
+) => {
 	try {
-		const response = await api.delete(`contributions/${contributionId}`);
-		// console.log("Contribution deleted successfully:", response.data);
+		const response = await api.get(
+			`/contributions/flat/${flatId}?starting=${starting}&ending=${ending}`
+		);
 		return { success: true, data: response.data };
 	} catch (error: any) {
-		console.error("Error deleting contributions:", error.response?.data);
+		console.error("Error fetching current contributions:", error.response?.data);
 		return {
 			success: false,
-			error: error.response?.data?.message || "Failed to delete contributions",
+			error: error.response?.data?.message || "Failed to fetch contributions",
+		};
+	}
+};
+
+export const updateContributionApi = async (id: string, data: Partial<CreateContributionData>) => {
+	try {
+		const response = await api.put(`contributions/${id}`, data);
+		return { success: true, data: response.data };
+	} catch (error: any) {
+		console.error("Error updating contribution:", error.response?.data);
+		return {
+			success: false,
+			error: error.response?.data?.message || "Failed to update contribution",
+		};
+	}
+};
+
+export const deleteContributionApi = async (id: string) => {
+	try {
+		const response = await api.delete(`contributions/${id}`);
+		return { success: true, data: response.data };
+	} catch (error: any) {
+		console.error("Error deleting contribution:", error.response?.data);
+		return {
+			success: false,
+			error: error.response?.data?.message || "Failed to delete contribution",
 		};
 	}
 };

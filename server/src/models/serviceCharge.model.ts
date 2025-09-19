@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const contributionSchema = new mongoose.Schema(
+const serviceChargeSchema = new mongoose.Schema(
 	{
 		flat: {
 			type: mongoose.Schema.Types.ObjectId,
@@ -23,8 +23,8 @@ const contributionSchema = new mongoose.Schema(
 	{ timestamps: true }
 );
 
-contributionSchema.index({ flat: 1, month: 1, year: 1 }, { unique: true });
+serviceChargeSchema.index({ flat: 1, month: 1, year: 1 }, { unique: true });
 
-const Contribution =
-	mongoose.models.Contribution || mongoose.model("Contribution", contributionSchema);
-export default Contribution;
+const ServiceCharge =
+	mongoose.models.ServiceCharge || mongoose.model("ServiceCharge", serviceChargeSchema);
+export default ServiceCharge;

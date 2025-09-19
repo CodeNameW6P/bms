@@ -7,10 +7,15 @@ import { Toaster } from "./components/ui/sonner";
 import SignInPage from "./pages/SignInPage";
 import AdminDashPage from "./pages/AdminDashPage";
 import FlatDashPage from "./pages/FlatDashPage";
-import ManageBillsPage from "./pages/ManageBillsPage";
-import ManageCylindersPage from "./pages/ManageCylindersPage";
+import ManageCylinderPLsPage from "./pages/ManageCylinderPLsPage";
 import ManageMosqueContributionsPage from "./pages/ManageMosqueContributionsPage";
 import ManageFlatsPage from "./pages/ManageFlatsPage";
+import ManageGasUsagesPage from "./pages/ManageGasUsagesPage";
+import ManageServiceChargesPage from "./pages/ManageServiceChargesPage";
+import ManageCylinderULsPage from "./pages/ManageCylinderULsPage";
+import ViewGasUsagesPage from "./pages/ViewFlatGasUsagesPage";
+import ViewContributionsPage from "./pages/ViewContributionsPage";
+import ViewServiceChargesPage from "./pages/ViewServiceChargesPage";
 
 function App() {
 	return (
@@ -20,13 +25,18 @@ function App() {
 				<Route path="/sign-in" element={<SignInPage />} />
 				<Route path="/admin-dashboard" element={<AdminDashPage />} />
 				<Route path="/flat-dashboard" element={<FlatDashPage />} />
-				<Route path="/manage-bills" element={<ManageBillsPage />} />
-				<Route path="/manage-cylinders" element={<ManageCylindersPage />} />
+				<Route path="/manage-cylinder-pls" element={<ManageCylinderPLsPage />} />
+				<Route path="/manage-cylinder-uls" element={<ManageCylinderULsPage />} />
 				<Route
 					path="/manage-mosque-contributions"
 					element={<ManageMosqueContributionsPage />}
 				/>
 				<Route path="/manage-flats" element={<ManageFlatsPage />} />
+				<Route path="/manage-gas-usages" element={<ManageGasUsagesPage />} />
+				<Route path="/manage-service-charges" element={<ManageServiceChargesPage />} />
+				<Route path="/view-gas-usages" element={<ViewGasUsagesPage />} />
+				<Route path="/view-mosque-contributions" element={<ViewContributionsPage />} />
+				<Route path="/view-service-charges" element={<ViewServiceChargesPage />} />
 			</Routes>
 			<Toaster closeButton position="top-center" />
 		</>

@@ -5,7 +5,7 @@ import {
 	CardAction,
 	CardContent,
 	CardDescription,
-	CardFooter,
+	// CardFooter,
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
@@ -38,26 +38,34 @@ import {
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
-	DialogTrigger,
+	// DialogTrigger,
 } from "@/components/ui/dialog";
+import { MONTHS } from "@/lib/constants";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import HeaderAdmin from "@/components/HeaderAdmin";
 import Footer from "@/components/Footer";
-import { adminAuthVerify } from "@/lib/authVerify";
+import { adminAuthCheckApi } from "@/api/authApi";
 import { fetchBuildingsApi } from "@/api/buildingApi";
 import {
-	fetchCylinderLogsApi,
-	createCylinderLogApi,
-	updateCylinderLogApi,
-	deleteCylinderLogApi,
-} from "@/api/cylinderLogApi";
+	createCylinderPLApi,
+	fetchBuildingCylinderPLsApi,
+	updateCylinderPLApi,
+	deleteCylinderPLApi,
+} from "@/api/cylinderPLApi";
 
-const CreateCylinderLogSchema = z.object({
-	buildingId: z.string().nonempty("Please select a building"),
-	date: z.string().nonempty("Please enter a date"),
+const CreateCylinderPLSchema = z.object({
+	buildingId: z
+		.string("Building can't be anything other than a string")
+		.nonempty("Please select a building"),
+	month: z
+		.string("Month can't be anything other than a string")
+		.nonempty("Please select a month"),
+	year: z
+		.number("Year can't be anything other than a number")
+		.gte(2020, "You're going too far back in the past"),
 	cylindersPurchased: z
 		.number("Cylinders purchased can't be anything other than a number")
 		.gte(1, "Cylinders purchased can't be less than or equal to zero"),
@@ -70,32 +78,40 @@ const CreateCylinderLogSchema = z.object({
 		.nonnegative("Other cost can't be negative"),
 });
 
-export type CreateCylinderLogData = z.infer<typeof CreateCylinderLogSchema>;
+export type CreateCylinderPLData = z.infer<typeof CreateCylinderPLSchema>;
 
-const ManageCylindersPage = () => {
+const ManageCylinderPLsPage = () => {
 	const [isPageLoading, setIsPageLoading] = useState(true);
 	const [buildings, setBuildings] = useState([]);
+	const [currentBuildingId, setCurrentBuildingId] = useState<string | null>(null);
 	const [cylinderLogs, setCylinderLogs] = useState([]);
 	const [isFormLoading, setIsFormLoading] = useState(false);
-	const [currentPage, setCurrentPage] = useState(1);
-	const [totalPages, setTotalPages] = useState(0);
 	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+	const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
 	const [editingId, setEditingId] = useState<string | null>(null);
 	const [deletingId, setDeletingId] = useState<string | null>(null);
+	const currentDate = new Date();
+	const [tableFilters, setTableFilters] = useState({
+		starting: `${currentDate.getFullYear()}-01`,
+		ending: currentDate.toISOString().slice(0, 7),
+	});
 	const navigate = useNavigate();
 
-	const fetchCylinderLogs = async () => {
-		const response = await fetchCylinderLogsApi(currentPage, 10, false);
+	const fetchBuildingCylinderPLs = async () => {
+		const response = await fetchBuildingCylinderPLsApi(
+			currentBuildingId as string,
+			tableFilters.starting,
+			tableFilters.ending
+		);
 		if (response.success) {
-			setCylinderLogs(response.data.cylinderLogs);
-			setTotalPages(response.data.totalPages);
+			setCylinderLogs(response.data);
 		} else {
 			toast("Failed to fetch cylinder logs", {
 				description:
 					response.error || "Some error is preventing cylinder logs from being fetched",
 				action: {
-					label: "Okay",
+					label: "OK",
 					onClick: () => {},
 				},
 			});
@@ -103,7 +119,22 @@ const ManageCylindersPage = () => {
 	};
 
 	useEffect(() => {
-		adminAuthVerify(setIsPageLoading, navigate);
+		const adminAuthCheck = async () => {
+			const response = await adminAuthCheckApi();
+			if (response.success) {
+				setIsPageLoading(false);
+			} else {
+				toast("Unauthorized", {
+					description: "Please sign in again",
+					action: {
+						label: "OK",
+						onClick: () => {},
+					},
+				});
+				navigate("/sign-in");
+			}
+		};
+
 		const fetchBuildings = async () => {
 			const response = await fetchBuildingsApi();
 			if (response.success) {
@@ -113,70 +144,86 @@ const ManageCylindersPage = () => {
 					description:
 						response.error || "Some error is preventing buildings from being fetched",
 					action: {
-						label: "Okay",
+						label: "OK",
 						onClick: () => {},
 					},
 				});
 			}
 		};
 
+		adminAuthCheck();
 		fetchBuildings();
-		fetchCylinderLogs();
 	}, [navigate]);
 
-	const createCylinderLogForm = useForm<CreateCylinderLogData>({
-		resolver: zodResolver(CreateCylinderLogSchema),
+	useEffect(() => {
+		if (buildings.length > 0) {
+			const firstBuilding: any = buildings[0];
+			setCurrentBuildingId(firstBuilding._id);
+		}
+	}, [buildings]);
+
+	useEffect(() => {
+		if (currentBuildingId) {
+			fetchBuildingCylinderPLs();
+		}
+	}, [currentBuildingId]);
+
+	const createCylinderPLForm = useForm<CreateCylinderPLData>({
+		resolver: zodResolver(CreateCylinderPLSchema),
 		mode: "onSubmit",
 		defaultValues: {
 			buildingId: "",
+			month: `${currentDate.getMonth() + 1}`,
+			year: currentDate.getFullYear(),
 		},
 	});
 
-	const editCylinderLogForm = useForm<CreateCylinderLogData>({
-		resolver: zodResolver(CreateCylinderLogSchema),
+	const editCylinderPLForm = useForm<CreateCylinderPLData>({
+		resolver: zodResolver(CreateCylinderPLSchema),
 		mode: "onSubmit",
 		defaultValues: {
 			buildingId: "",
+			month: "",
 		},
 	});
 
-	const handleCreateCylinderLog = async (formData: CreateCylinderLogData) => {
+	const handleCreateCylinderLog = async (formData: CreateCylinderPLData) => {
 		setIsFormLoading(true);
-		const response = await createCylinderLogApi(formData);
+		const response = await createCylinderPLApi(formData);
 		if (response.success) {
-			fetchCylinderLogs();
+			fetchBuildingCylinderPLs();
 			toast("Cylinder log has been created", {
 				description: "Check the table for more options",
 				action: {
-					label: "Okay",
+					label: "OK",
 					onClick: () => {},
 				},
 			});
-			createCylinderLogForm.reset();
+			createCylinderPLForm.reset();
 		} else {
-			createCylinderLogForm.setError("root", {
+			createCylinderPLForm.setError("root", {
 				message: response.error || "Failed to create cylinder log",
 			});
 		}
 		setIsFormLoading(false);
 	};
 
-	const handleEditCylinderLog = async (id: string, formData: CreateCylinderLogData) => {
+	const handleEditCylinderLog = async (id: string, formData: CreateCylinderPLData) => {
 		setIsFormLoading(true);
-		const response = await updateCylinderLogApi(id, formData);
+		const response = await updateCylinderPLApi(id, formData);
 		if (response.success) {
-			fetchCylinderLogs();
+			fetchBuildingCylinderPLs();
 			toast("Cylinder log has been updated", {
 				description: "Check the table for more options",
 				action: {
-					label: "Okay",
+					label: "OK",
 					onClick: () => {},
 				},
 			});
 			setIsEditDialogOpen(false);
-			editCylinderLogForm.reset();
+			editCylinderPLForm.reset();
 		} else {
-			editCylinderLogForm.setError("root", {
+			editCylinderPLForm.setError("root", {
 				message: response.error || "Failed to update cylinder log",
 			});
 		}
@@ -184,13 +231,13 @@ const ManageCylindersPage = () => {
 	};
 
 	const handleDeleteCylinderLog = async (id: string) => {
-		const response = await deleteCylinderLogApi(id);
+		const response = await deleteCylinderPLApi(id);
 		if (response.success) {
-			fetchCylinderLogs();
+			fetchBuildingCylinderPLs();
 			toast("Cylinder log has been deleted", {
 				description: "Check the table for more options",
 				action: {
-					label: "Cancel",
+					label: "OK",
 					onClick: () => {},
 				},
 			});
@@ -200,20 +247,11 @@ const ManageCylindersPage = () => {
 				description:
 					response.error || "Some error is preventing cylinder log from being deleted",
 				action: {
-					label: "Okay",
+					label: "OK",
 					onClick: () => {},
 				},
 			});
 		}
-	};
-
-	const convertISODateIntoDDMMYYYYFormat = (isoDate: string) => {
-		const date = new Date(isoDate);
-		const day = String(date.getDate()).padStart(2, "0");
-		const month = String(date.getMonth() + 1).padStart(2, "0");
-		const year = date.getFullYear();
-
-		return `${day}/${month}/${year}`;
 	};
 
 	return (
@@ -222,25 +260,24 @@ const ManageCylindersPage = () => {
 				<HeaderAdmin />
 				<Card className="flex grow container mx-auto">
 					<CardHeader>
-						<CardTitle className="text-2xl">Create Cylinder Purchase Log</CardTitle>
+						<CardTitle className="text-2xl">Manage Cylinder Purchase Logs</CardTitle>
 						<CardDescription>
 							Please make sure all information is correct before creating
 						</CardDescription>
-						<CardAction>Card Action</CardAction>
 					</CardHeader>
 					<CardContent className="flex flex-col gap-6">
 						<form
 							className="flex flex-col gap-6 max-w-md"
-							onSubmit={createCylinderLogForm.handleSubmit(handleCreateCylinderLog)}
+							onSubmit={createCylinderPLForm.handleSubmit(handleCreateCylinderLog)}
 							action=""
 							method=""
 						>
 							<div className="flex flex-col gap-2">
 								<Label htmlFor="building">Building</Label>
 								<Select
-									value={createCylinderLogForm.watch("buildingId")}
+									value={createCylinderPLForm.watch("buildingId")}
 									onValueChange={(value) =>
-										createCylinderLogForm.setValue("buildingId", value)
+										createCylinderPLForm.setValue("buildingId", value)
 									}
 									defaultValue=""
 								>
@@ -258,18 +295,52 @@ const ManageCylindersPage = () => {
 										</SelectGroup>
 									</SelectContent>
 								</Select>
-								{createCylinderLogForm.formState.errors.buildingId && (
+								{createCylinderPLForm.formState.errors.buildingId && (
 									<span className="text-xs text-red-500 font-semibold">
-										{createCylinderLogForm.formState.errors.buildingId.message}
+										{createCylinderPLForm.formState.errors.buildingId.message}
 									</span>
 								)}
 							</div>
 							<div className="flex flex-col gap-2">
-								<Label htmlFor="date">Date</Label>
-								<Input type="date" {...createCylinderLogForm.register("date")} />
-								{createCylinderLogForm.formState.errors.date && (
+								<Label htmlFor="month">Month</Label>
+								<Select
+									value={createCylinderPLForm.watch("month")}
+									onValueChange={(value) =>
+										createCylinderPLForm.setValue("month", value)
+									}
+									defaultValue=""
+								>
+									<SelectTrigger className="w-full">
+										<SelectValue placeholder="Select month" />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectGroup>
+											<SelectLabel>Months</SelectLabel>
+											{MONTHS.map((month, index) => (
+												<SelectItem key={index} value={`${index + 1}`}>
+													{month}
+												</SelectItem>
+											))}
+										</SelectGroup>
+									</SelectContent>
+								</Select>
+								{createCylinderPLForm.formState.errors.month && (
 									<span className="text-xs text-red-500 font-semibold">
-										{createCylinderLogForm.formState.errors.date.message}
+										{createCylinderPLForm.formState.errors.month.message}
+									</span>
+								)}
+							</div>
+							<div className="flex flex-col gap-2">
+								<Label htmlFor="year">Year</Label>
+								<Input
+									type="number"
+									{...createCylinderPLForm.register("year", {
+										valueAsNumber: true,
+									})}
+								/>
+								{createCylinderPLForm.formState.errors.year && (
+									<span className="text-xs text-red-500 font-semibold">
+										{createCylinderPLForm.formState.errors.year.message}
 									</span>
 								)}
 							</div>
@@ -277,25 +348,25 @@ const ManageCylindersPage = () => {
 								<Label htmlFor="cylindersPurchased">Cylinders Purchased</Label>
 								<Input
 									type="number"
-									{...createCylinderLogForm.register("cylindersPurchased", {
+									{...createCylinderPLForm.register("cylindersPurchased", {
 										valueAsNumber: true,
 									})}
 								/>
-								{createCylinderLogForm.formState.errors.cylindersPurchased && (
+								{createCylinderPLForm.formState.errors.cylindersPurchased && (
 									<span className="text-xs text-red-500 font-semibold">
 										{
-											createCylinderLogForm.formState.errors
-												.cylindersPurchased.message
+											createCylinderPLForm.formState.errors.cylindersPurchased
+												.message
 										}
 									</span>
 								)}
 							</div>
 							<div className="flex flex-col gap-2">
 								<Label htmlFor="dealer">Dealer (Optional)</Label>
-								<Input type="text" {...createCylinderLogForm.register("dealer")} />
-								{createCylinderLogForm.formState.errors.dealer && (
+								<Input type="text" {...createCylinderPLForm.register("dealer")} />
+								{createCylinderPLForm.formState.errors.dealer && (
 									<span className="text-xs text-red-500 font-semibold">
-										{createCylinderLogForm.formState.errors.dealer.message}
+										{createCylinderPLForm.formState.errors.dealer.message}
 									</span>
 								)}
 							</div>
@@ -303,13 +374,13 @@ const ManageCylindersPage = () => {
 								<Label htmlFor="cost">Cost</Label>
 								<Input
 									type="number"
-									{...createCylinderLogForm.register("cost", {
+									{...createCylinderPLForm.register("cost", {
 										valueAsNumber: true,
 									})}
 								/>
-								{createCylinderLogForm.formState.errors.cost && (
+								{createCylinderPLForm.formState.errors.cost && (
 									<span className="text-xs text-red-500 font-semibold">
-										{createCylinderLogForm.formState.errors.cost.message}
+										{createCylinderPLForm.formState.errors.cost.message}
 									</span>
 								)}
 							</div>
@@ -317,31 +388,39 @@ const ManageCylindersPage = () => {
 								<Label htmlFor="otherCost">Other Cost</Label>
 								<Input
 									type="number"
-									{...createCylinderLogForm.register("otherCost", {
+									{...createCylinderPLForm.register("otherCost", {
 										valueAsNumber: true,
 									})}
 								/>
-								{createCylinderLogForm.formState.errors.otherCost && (
+								{createCylinderPLForm.formState.errors.otherCost && (
 									<span className="text-xs text-red-500 font-semibold">
-										{createCylinderLogForm.formState.errors.otherCost.message}
+										{createCylinderPLForm.formState.errors.otherCost.message}
 									</span>
 								)}
 							</div>
 							<Button type="submit" disabled={isFormLoading}>
 								{isFormLoading ? "Loading..." : "Create"}
 							</Button>
-							{createCylinderLogForm.formState.errors.root && (
+							{createCylinderPLForm.formState.errors.root && (
 								<span className="text-red-500">
-									{createCylinderLogForm.formState.errors.root.message}
+									{createCylinderPLForm.formState.errors.root.message}
 								</span>
 							)}
 						</form>
 						<Card className="">
 							<CardHeader>
-								<CardTitle className="">Cylinder Logs</CardTitle>
-								<CardDescription>Card description</CardDescription>
-								<CardAction>
-									<Button onClick={fetchCylinderLogs} variant={"outline"}>
+								<CardTitle className="">Cylinder Purchase Log Table</CardTitle>
+								<CardDescription>
+									From {tableFilters.ending} | To {tableFilters.starting}
+								</CardDescription>
+								<CardAction className="flex gap-4">
+									<Button
+										onClick={() => setIsFilterDialogOpen(true)}
+										variant={"outline"}
+									>
+										Filters
+									</Button>
+									<Button onClick={fetchBuildingCylinderPLs} variant={"outline"}>
 										Refresh
 									</Button>
 								</CardAction>
@@ -350,14 +429,15 @@ const ManageCylindersPage = () => {
 								<Table>
 									<TableCaption>
 										{cylinderLogs.length > 0
-											? `Page ${currentPage} out of ${totalPages}`
-											: "No data"}
+											? `${cylinderLogs.length} Cylinder Purchase Log(s)`
+											: "No Data"}
 									</TableCaption>
 									<TableHeader>
 										<TableRow className="bg-muted">
 											<TableHead>Cylinder Log ID</TableHead>
 											<TableHead>Building Number</TableHead>
-											<TableHead>Date</TableHead>
+											<TableHead>Month</TableHead>
+											<TableHead>Year</TableHead>
 											<TableHead>Cylinders Purchased</TableHead>
 											<TableHead>Dealer</TableHead>
 											<TableHead className="text-right">Cost</TableHead>
@@ -373,30 +453,28 @@ const ManageCylindersPage = () => {
 													{cylinderLog.building.buildingNumber}
 												</TableCell>
 												<TableCell>
-													{convertISODateIntoDDMMYYYYFormat(
-														cylinderLog.date
-													)}
+													{MONTHS[cylinderLog.month - 1]}
 												</TableCell>
+												<TableCell>{cylinderLog.year}</TableCell>
 												<TableCell>
 													{cylinderLog.cylindersPurchased}
 												</TableCell>
 												<TableCell>{cylinderLog.dealer}</TableCell>
 												<TableCell className="text-right">
-													{cylinderLog.cost}
+													{cylinderLog.cost.toLocaleString("en-IN")}
 												</TableCell>
 												<TableCell className="text-right">
-													{cylinderLog.otherCost}
+													{cylinderLog.otherCost.toLocaleString("en-IN")}
 												</TableCell>
-												<TableCell className="flex flex-row justify-center gap-4">
+												<TableCell className="flex flex-row justify-center gap-4 font-semibold">
 													<button
 														onClick={() => {
 															setEditingId(cylinderLog._id);
-															editCylinderLogForm.reset({
+															editCylinderPLForm.reset({
 																buildingId:
 																	cylinderLog.building._id,
-																date: cylinderLog.date.split(
-																	"T"
-																)[0],
+																month: `${cylinderLog.month}`,
+																year: cylinderLog.year,
 																cylindersPurchased:
 																	cylinderLog.cylindersPurchased,
 																dealer: cylinderLog.dealer,
@@ -427,7 +505,7 @@ const ManageCylindersPage = () => {
 									<DialogContent>
 										<DialogHeader>
 											<DialogTitle className="">
-												Edit Cylinder Log
+												Edit Cylinder Purchase Log
 											</DialogTitle>
 											<DialogDescription>
 												Please make sure all information is correct before
@@ -435,7 +513,7 @@ const ManageCylindersPage = () => {
 											</DialogDescription>
 										</DialogHeader>
 										<form
-											onSubmit={editCylinderLogForm.handleSubmit(
+											onSubmit={editCylinderPLForm.handleSubmit(
 												(formData) => {
 													handleEditCylinderLog(
 														editingId as string,
@@ -450,9 +528,9 @@ const ManageCylindersPage = () => {
 											<div className="flex flex-col gap-2">
 												<Label htmlFor="building">Building</Label>
 												<Select
-													value={editCylinderLogForm.watch("buildingId")}
+													value={editCylinderPLForm.watch("buildingId")}
 													onValueChange={(value) =>
-														editCylinderLogForm.setValue(
+														editCylinderPLForm.setValue(
 															"buildingId",
 															value
 														)
@@ -478,27 +556,63 @@ const ManageCylindersPage = () => {
 														</SelectGroup>
 													</SelectContent>
 												</Select>
-												{editCylinderLogForm.formState.errors
-													.buildingId && (
+												{editCylinderPLForm.formState.errors.buildingId && (
 													<span className="text-xs text-red-500 font-semibold">
 														{
-															editCylinderLogForm.formState.errors
+															editCylinderPLForm.formState.errors
 																.buildingId.message
 														}
 													</span>
 												)}
 											</div>
 											<div className="flex flex-col gap-2">
-												<Label htmlFor="date">Date</Label>
-												<Input
-													type="date"
-													{...editCylinderLogForm.register("date")}
-												/>
-												{editCylinderLogForm.formState.errors.date && (
+												<Label htmlFor="month">Month</Label>
+												<Select
+													value={editCylinderPLForm.watch("month")}
+													onValueChange={(value) =>
+														editCylinderPLForm.setValue("month", value)
+													}
+													defaultValue=""
+												>
+													<SelectTrigger className="w-full">
+														<SelectValue placeholder="Select month" />
+													</SelectTrigger>
+													<SelectContent>
+														<SelectGroup>
+															<SelectLabel>Months</SelectLabel>
+															{MONTHS.map((month, index) => (
+																<SelectItem
+																	key={index}
+																	value={`${index + 1}`}
+																>
+																	{month}
+																</SelectItem>
+															))}
+														</SelectGroup>
+													</SelectContent>
+												</Select>
+												{editCylinderPLForm.formState.errors.month && (
 													<span className="text-xs text-red-500 font-semibold">
 														{
-															editCylinderLogForm.formState.errors
-																.date.message
+															editCylinderPLForm.formState.errors
+																.month.message
+														}
+													</span>
+												)}
+											</div>
+											<div className="flex flex-col gap-2">
+												<Label htmlFor="year">Year</Label>
+												<Input
+													type="number"
+													{...createCylinderPLForm.register("year", {
+														valueAsNumber: true,
+													})}
+												/>
+												{createCylinderPLForm.formState.errors.year && (
+													<span className="text-xs text-red-500 font-semibold">
+														{
+															createCylinderPLForm.formState.errors
+																.year.message
 														}
 													</span>
 												)}
@@ -509,18 +623,18 @@ const ManageCylindersPage = () => {
 												</Label>
 												<Input
 													type="number"
-													{...editCylinderLogForm.register(
+													{...editCylinderPLForm.register(
 														"cylindersPurchased",
 														{
 															valueAsNumber: true,
 														}
 													)}
 												/>
-												{editCylinderLogForm.formState.errors
+												{editCylinderPLForm.formState.errors
 													.cylindersPurchased && (
 													<span className="text-xs text-red-500 font-semibold">
 														{
-															editCylinderLogForm.formState.errors
+															editCylinderPLForm.formState.errors
 																.cylindersPurchased.message
 														}
 													</span>
@@ -530,12 +644,12 @@ const ManageCylindersPage = () => {
 												<Label htmlFor="dealer">Dealer (Optional)</Label>
 												<Input
 													type="text"
-													{...editCylinderLogForm.register("dealer")}
+													{...editCylinderPLForm.register("dealer")}
 												/>
-												{editCylinderLogForm.formState.errors.dealer && (
+												{editCylinderPLForm.formState.errors.dealer && (
 													<span className="text-xs text-red-500 font-semibold">
 														{
-															editCylinderLogForm.formState.errors
+															editCylinderPLForm.formState.errors
 																.dealer.message
 														}
 													</span>
@@ -545,15 +659,15 @@ const ManageCylindersPage = () => {
 												<Label htmlFor="cost">Cost</Label>
 												<Input
 													type="number"
-													{...editCylinderLogForm.register("cost", {
+													{...editCylinderPLForm.register("cost", {
 														valueAsNumber: true,
 													})}
 												/>
-												{editCylinderLogForm.formState.errors.cost && (
+												{editCylinderPLForm.formState.errors.cost && (
 													<span className="text-xs text-red-500 font-semibold">
 														{
-															editCylinderLogForm.formState.errors
-																.cost.message
+															editCylinderPLForm.formState.errors.cost
+																.message
 														}
 													</span>
 												)}
@@ -562,14 +676,14 @@ const ManageCylindersPage = () => {
 												<Label htmlFor="otherCost">Other Cost</Label>
 												<Input
 													type="number"
-													{...editCylinderLogForm.register("otherCost", {
+													{...editCylinderPLForm.register("otherCost", {
 														valueAsNumber: true,
 													})}
 												/>
-												{editCylinderLogForm.formState.errors.otherCost && (
+												{editCylinderPLForm.formState.errors.otherCost && (
 													<span className="text-xs text-red-500 font-semibold">
 														{
-															editCylinderLogForm.formState.errors
+															editCylinderPLForm.formState.errors
 																.otherCost.message
 														}
 													</span>
@@ -579,11 +693,11 @@ const ManageCylindersPage = () => {
 												{isFormLoading ? "Loading..." : "Save Changes"}
 											</Button>
 										</form>
-										{editCylinderLogForm.formState.errors.root && (
+										{editCylinderPLForm.formState.errors.root && (
 											<DialogFooter>
 												<span className="text-red-500 text-center w-full">
 													{
-														editCylinderLogForm.formState.errors.root
+														editCylinderPLForm.formState.errors.root
 															.message
 													}
 												</span>
@@ -598,7 +712,7 @@ const ManageCylindersPage = () => {
 									<DialogContent>
 										<DialogHeader>
 											<DialogTitle className="">
-												Are you sure you want to delete this cylinder log?
+												Delete cylinder purchase log?
 											</DialogTitle>
 											<DialogDescription>
 												Once you delete, this action can't be undone
@@ -623,38 +737,69 @@ const ManageCylindersPage = () => {
 										</DialogFooter>
 									</DialogContent>
 								</Dialog>
+								<Dialog
+									open={isFilterDialogOpen}
+									onOpenChange={setIsFilterDialogOpen}
+								>
+									<DialogContent>
+										<DialogHeader>
+											<DialogTitle className="">Set filters</DialogTitle>
+										</DialogHeader>
+										<div className="flex flex-col gap-6">
+											<div className="flex flex-col gap-2">
+												<Label htmlFor="from">From</Label>
+												<Input
+													type="month"
+													value={tableFilters.ending}
+													onChange={(
+														event: React.ChangeEvent<HTMLInputElement>
+													) =>
+														setTableFilters((prev) => ({
+															...prev,
+															ending: event.target.value,
+														}))
+													}
+												/>
+											</div>
+											<div className="flex flex-col gap-2">
+												<Label htmlFor="to">To</Label>
+												<Input
+													type="month"
+													value={tableFilters.starting}
+													onChange={(
+														event: React.ChangeEvent<HTMLInputElement>
+													) =>
+														setTableFilters((prev) => ({
+															...prev,
+															starting: event.target.value,
+														}))
+													}
+												/>
+											</div>
+										</div>
+										<DialogFooter className="flex gap-4">
+											<DialogClose asChild>
+												<Button
+													variant={"outline"}
+													onClick={() => setIsFilterDialogOpen(false)}
+												>
+													Cancel
+												</Button>
+											</DialogClose>
+											<Button
+												onClick={() => {
+													fetchBuildingCylinderPLs();
+													setIsFilterDialogOpen(false);
+												}}
+											>
+												Filter
+											</Button>
+										</DialogFooter>
+									</DialogContent>
+								</Dialog>
 							</CardContent>
-							<CardFooter className="flex justify-between">
-								<Button
-									onClick={() => {
-										if (currentPage > 1) {
-											setCurrentPage(currentPage - 1);
-											fetchCylinderLogs();
-										}
-									}}
-									disabled={currentPage === 1}
-									variant={"outline"}
-								>
-									Previous
-								</Button>
-								<Button
-									onClick={() => {
-										if (currentPage < totalPages) {
-											setCurrentPage(currentPage + 1);
-											fetchCylinderLogs();
-										}
-									}}
-									disabled={currentPage === totalPages || totalPages === 0}
-									variant={"outline"}
-								>
-									Next
-								</Button>
-							</CardFooter>
 						</Card>
 					</CardContent>
-					<CardFooter>
-						<p>Card Footer</p>
-					</CardFooter>
 				</Card>
 				<Footer />
 			</main>
@@ -662,4 +807,4 @@ const ManageCylindersPage = () => {
 	);
 };
 
-export default ManageCylindersPage;
+export default ManageCylinderPLsPage;

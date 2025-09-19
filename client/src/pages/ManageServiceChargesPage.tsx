@@ -53,14 +53,14 @@ import { fetchBuildingsApi } from "@/api/buildingApi";
 import { adminAuthCheckApi } from "@/api/authApi";
 import { fetchBuildingFlatsApi } from "@/api/flatApi";
 import {
-	createContributionApi,
-	createMultipleContributionsApi,
-	fetchBuildingContributionsApi,
-	updateContributionApi,
-	deleteContributionApi,
-} from "@/api/contributionApi";
+	createServiceChargeApi,
+	createMultipleServiceChargesApi,
+	fetchBuildingServiceChargesApi,
+	updateServiceChargeApi,
+	deleteServiceChargeApi,
+} from "@/api/serviceChargeApi";
 
-const CreateContributionSchema = z.object({
+const CreateServiceChargeSchema = z.object({
 	flatId: z.string("Flat can't be anything other than a string").nonempty("Please select a flat"),
 	month: z
 		.string("Month can't be anything other than a string")
@@ -73,21 +73,21 @@ const CreateContributionSchema = z.object({
 		.nonnegative("Amount can't be negative"),
 });
 
-const CreateMultipleContributionsSchema = CreateContributionSchema.pick({
+const CreateMultipleServiceChargesSchema = CreateServiceChargeSchema.pick({
 	month: true,
 	year: true,
 });
 
-export type CreateContributionData = z.infer<typeof CreateContributionSchema>;
-type CreateMultipleContributionsData = z.infer<typeof CreateMultipleContributionsSchema>;
+export type CreateServiceChargeData = z.infer<typeof CreateServiceChargeSchema>;
+type CreateMultipleServiceChargesData = z.infer<typeof CreateMultipleServiceChargesSchema>;
 
-const ManageMosqueContributionsPage: React.FC = () => {
+const ManageServiceChargesPage: React.FC = () => {
 	const [isPageLoading, setIsPageLoading] = useState(true);
 	const [isFormLoading, setIsFormLoading] = useState(false);
 	const [buildings, setBuildings] = useState([]);
 	const [currentBuildingId, setCurrentBuildingId] = useState<string | null>(null);
 	const [flats, setFlats] = useState([]);
-	const [contributions, setContributions] = useState([]);
+	const [serviceCharges, setServiceCharges] = useState([]);
 	const [file, setFile] = useState<File | null>(null);
 	const [fileInputError, setFileInputError] = useState<string | null>(null);
 	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -102,16 +102,16 @@ const ManageMosqueContributionsPage: React.FC = () => {
 	});
 	const navigate = useNavigate();
 
-	const fetchBuildingContributions = async () => {
-		const response = await fetchBuildingContributionsApi(
+	const fetchBuildingServiceCharges = async () => {
+		const response = await fetchBuildingServiceChargesApi(
 			currentBuildingId as string,
 			tableFilters.starting,
 			tableFilters.ending
 		);
 		if (response.success) {
-			setContributions(response.data);
+			setServiceCharges(response.data);
 		} else {
-			toast("Failed to fetch building contributions", {
+			toast("Failed to fetch building service charges", {
 				description:
 					response.error || "Some error is preventing contributions from being fetched",
 				action: {
@@ -185,12 +185,12 @@ const ManageMosqueContributionsPage: React.FC = () => {
 
 		if (currentBuildingId) {
 			fetchBuildingFlats();
-			fetchBuildingContributions();
+			fetchBuildingServiceCharges();
 		}
 	}, [currentBuildingId]);
 
-	const createContributionForm = useForm<CreateContributionData>({
-		resolver: zodResolver(CreateContributionSchema),
+	const createServiceChargeForm = useForm<CreateServiceChargeData>({
+		resolver: zodResolver(CreateServiceChargeSchema),
 		mode: "onSubmit",
 		defaultValues: {
 			flatId: "",
@@ -199,16 +199,16 @@ const ManageMosqueContributionsPage: React.FC = () => {
 		},
 	});
 
-	const createMultipleContributionsForm = useForm<CreateMultipleContributionsData>({
-		resolver: zodResolver(CreateMultipleContributionsSchema),
+	const createMultipleServiceChargesForm = useForm<CreateMultipleServiceChargesData>({
+		resolver: zodResolver(CreateMultipleServiceChargesSchema),
 		defaultValues: {
 			month: `${currentDate.getMonth() + 1}`,
 			year: currentDate.getFullYear(),
 		},
 	});
 
-	const editContributionForm = useForm<CreateContributionData>({
-		resolver: zodResolver(CreateContributionSchema),
+	const editServiceChargeForm = useForm<CreateServiceChargeData>({
+		resolver: zodResolver(CreateServiceChargeSchema),
 		mode: "onSubmit",
 		defaultValues: {
 			flatId: "",
@@ -216,28 +216,30 @@ const ManageMosqueContributionsPage: React.FC = () => {
 		},
 	});
 
-	const handleCreateContribution = async (formData: CreateContributionData) => {
+	const handleCreateContribution = async (formData: CreateServiceChargeData) => {
 		setIsFormLoading(true);
-		const response = await createContributionApi(formData);
+		const response = await createServiceChargeApi(formData);
 		if (response.success) {
-			fetchBuildingContributions();
-			toast("Contribution has been created", {
+			fetchBuildingServiceCharges();
+			toast("Service charge has been created", {
 				description: "Check the table for more options",
 				action: {
 					label: "OK",
 					onClick: () => {},
 				},
 			});
-			createContributionForm.reset();
+			createServiceChargeForm.reset();
 		} else {
-			createContributionForm.setError("root", {
-				message: response.error || "Failed to create contribution",
+			createServiceChargeForm.setError("root", {
+				message: response.error || "Failed to create service charge",
 			});
 		}
 		setIsFormLoading(false);
 	};
 
-	const handleCreateMultipleContributions = async (formData: CreateMultipleContributionsData) => {
+	const handleCreateMultipleServiceCharges = async (
+		formData: CreateMultipleServiceChargesData
+	) => {
 		setIsFormLoading(true);
 		setFileInputError(null);
 
@@ -287,9 +289,9 @@ const ManageMosqueContributionsPage: React.FC = () => {
 			};
 		});
 
-		const response = await createMultipleContributionsApi({ data: data });
+		const response = await createMultipleServiceChargesApi({ data: data });
 		if (response.success) {
-			fetchBuildingContributions();
+			fetchBuildingServiceCharges();
 			toast(response.data.message, {
 				description: "Check the table for more options",
 				action: {
@@ -297,22 +299,22 @@ const ManageMosqueContributionsPage: React.FC = () => {
 					onClick: () => {},
 				},
 			});
-			createMultipleContributionsForm.reset();
+			createMultipleServiceChargesForm.reset();
 			setFile(null);
 		} else {
-			createMultipleContributionsForm.setError("root", {
+			createMultipleServiceChargesForm.setError("root", {
 				message: response.error || "Failed to upload data",
 			});
 		}
 		setIsFormLoading(false);
 	};
 
-	const handleEditContribution = async (id: string, formData: CreateContributionData) => {
+	const handleEditServiceCharge = async (id: string, formData: CreateServiceChargeData) => {
 		setIsFormLoading(true);
-		const response = await updateContributionApi(id, formData);
+		const response = await updateServiceChargeApi(id, formData);
 		if (response.success) {
-			fetchBuildingContributions();
-			toast("Contribution has been edited", {
+			fetchBuildingServiceCharges();
+			toast(response.data.message, {
 				description: "Check the table for more options",
 				action: {
 					label: "OK",
@@ -320,20 +322,20 @@ const ManageMosqueContributionsPage: React.FC = () => {
 				},
 			});
 			setIsEditDialogOpen(false);
-			editContributionForm.reset();
+			editServiceChargeForm.reset();
 		} else {
-			editContributionForm.setError("root", {
-				message: response.error || "Failed to edit contribution",
+			editServiceChargeForm.setError("root", {
+				message: response.error || "Failed to edit service charge",
 			});
 		}
 		setIsFormLoading(false);
 	};
 
-	const handleDeleteContribution = async (id: string) => {
-		const response = await deleteContributionApi(id);
+	const handleDeleteServiceCharge = async (id: string) => {
+		const response = await deleteServiceChargeApi(id);
 		if (response.success) {
-			fetchBuildingContributions();
-			toast("Contribution has been deleted", {
+			fetchBuildingServiceCharges();
+			toast(response.data.message, {
 				description: "Check the table for more options",
 				action: {
 					label: "OK",
@@ -354,7 +356,7 @@ const ManageMosqueContributionsPage: React.FC = () => {
 	};
 
 	const handleDownloadSpreadsheet = () => {
-		if (!contributions || contributions.length === 0) {
+		if (!serviceCharges || serviceCharges.length === 0) {
 			toast("Can't let you download a spreadsheet", {
 				description: "There aren't any data to make a spreadsheet out of",
 				action: {
@@ -365,8 +367,8 @@ const ManageMosqueContributionsPage: React.FC = () => {
 			return;
 		}
 
-		const data = contributions.map((item: any) => ({
-			"Mosque Contribution ID": item._id,
+		const data = serviceCharges.map((item: any) => ({
+			"Service Charge ID": item._id,
 			"Flat Number": item.flat.flatNumber,
 			Month: MONTHS[item.month - 1],
 			Year: item.year,
@@ -378,7 +380,7 @@ const ManageMosqueContributionsPage: React.FC = () => {
 		xlsx.utils.book_append_sheet(workbook, worksheet, "Gas usage records");
 		xlsx.writeFile(
 			workbook,
-			`service_charges_f-${tableFilters.starting}_t-${tableFilters.ending}.xlsx`
+			`mosque_contributions_f-${tableFilters.starting}_t-${tableFilters.ending}.xlsx`
 		);
 	};
 
@@ -388,7 +390,7 @@ const ManageMosqueContributionsPage: React.FC = () => {
 				<HeaderAdmin />
 				<Card className="flex grow container mx-auto">
 					<CardHeader>
-						<CardTitle className="text-2xl">Manage Mosque Contributions</CardTitle>
+						<CardTitle className="text-2xl">Manage Service Charges</CardTitle>
 						<CardDescription>
 							Please make sure all information is correct before proceeding
 						</CardDescription>
@@ -425,7 +427,7 @@ const ManageMosqueContributionsPage: React.FC = () => {
 							<TabsContent value="individual">
 								<form
 									className="flex flex-col gap-6"
-									onSubmit={createContributionForm.handleSubmit(
+									onSubmit={createServiceChargeForm.handleSubmit(
 										handleCreateContribution
 									)}
 									action=""
@@ -434,9 +436,9 @@ const ManageMosqueContributionsPage: React.FC = () => {
 									<div className="flex flex-col gap-2">
 										<Label htmlFor="flatId">Flat</Label>
 										<Select
-											value={createContributionForm.watch("flatId")}
+											value={createServiceChargeForm.watch("flatId")}
 											onValueChange={(value) =>
-												createContributionForm.setValue("flatId", value)
+												createServiceChargeForm.setValue("flatId", value)
 											}
 											defaultValue=""
 										>
@@ -454,10 +456,10 @@ const ManageMosqueContributionsPage: React.FC = () => {
 												</SelectGroup>
 											</SelectContent>
 										</Select>
-										{createContributionForm.formState.errors.flatId && (
+										{createServiceChargeForm.formState.errors.flatId && (
 											<span className="text-xs text-red-500 font-semibold">
 												{
-													createContributionForm.formState.errors.flatId
+													createServiceChargeForm.formState.errors.flatId
 														.message
 												}
 											</span>
@@ -466,9 +468,9 @@ const ManageMosqueContributionsPage: React.FC = () => {
 									<div className="flex flex-col gap-2">
 										<Label htmlFor="month">Month</Label>
 										<Select
-											value={createContributionForm.watch("month")}
+											value={createServiceChargeForm.watch("month")}
 											onValueChange={(value) =>
-												createContributionForm.setValue("month", value)
+												createServiceChargeForm.setValue("month", value)
 											}
 											defaultValue=""
 										>
@@ -489,10 +491,10 @@ const ManageMosqueContributionsPage: React.FC = () => {
 												</SelectGroup>
 											</SelectContent>
 										</Select>
-										{createContributionForm.formState.errors.month && (
+										{createServiceChargeForm.formState.errors.month && (
 											<span className="text-xs text-red-500 font-semibold">
 												{
-													createContributionForm.formState.errors.month
+													createServiceChargeForm.formState.errors.month
 														.message
 												}
 											</span>
@@ -502,14 +504,14 @@ const ManageMosqueContributionsPage: React.FC = () => {
 										<Label htmlFor="year">Year</Label>
 										<Input
 											type="number"
-											{...createContributionForm.register("year", {
+											{...createServiceChargeForm.register("year", {
 												valueAsNumber: true,
 											})}
 										/>
-										{createContributionForm.formState.errors.year && (
+										{createServiceChargeForm.formState.errors.year && (
 											<span className="text-xs text-red-500 font-semibold">
 												{
-													createContributionForm.formState.errors.year
+													createServiceChargeForm.formState.errors.year
 														.message
 												}
 											</span>
@@ -519,14 +521,14 @@ const ManageMosqueContributionsPage: React.FC = () => {
 										<Label htmlFor="amount">Amount</Label>
 										<Input
 											type="number"
-											{...createContributionForm.register("amount", {
+											{...createServiceChargeForm.register("amount", {
 												valueAsNumber: true,
 											})}
 										/>
-										{createContributionForm.formState.errors.amount && (
+										{createServiceChargeForm.formState.errors.amount && (
 											<span className="text-xs text-red-500 font-semibold">
 												{
-													createContributionForm.formState.errors.amount
+													createServiceChargeForm.formState.errors.amount
 														.message
 												}
 											</span>
@@ -535,9 +537,9 @@ const ManageMosqueContributionsPage: React.FC = () => {
 									<Button type="submit" disabled={isFormLoading}>
 										{isFormLoading ? "Loading..." : "Create"}
 									</Button>
-									{createContributionForm.formState.errors.root && (
+									{createServiceChargeForm.formState.errors.root && (
 										<span className="text-red-500 text-center">
-											{createContributionForm.formState.errors.root.message}
+											{createServiceChargeForm.formState.errors.root.message}
 										</span>
 									)}
 								</form>
@@ -545,8 +547,8 @@ const ManageMosqueContributionsPage: React.FC = () => {
 							<TabsContent value="multiple">
 								<form
 									className="flex flex-col gap-6"
-									onSubmit={createMultipleContributionsForm.handleSubmit(
-										handleCreateMultipleContributions
+									onSubmit={createMultipleServiceChargesForm.handleSubmit(
+										handleCreateMultipleServiceCharges
 									)}
 									action=""
 									method=""
@@ -554,9 +556,9 @@ const ManageMosqueContributionsPage: React.FC = () => {
 									<div className="flex flex-col gap-2">
 										<Label htmlFor="month">Month</Label>
 										<Select
-											value={createMultipleContributionsForm.watch("month")}
+											value={createMultipleServiceChargesForm.watch("month")}
 											onValueChange={(value) =>
-												createMultipleContributionsForm.setValue(
+												createMultipleServiceChargesForm.setValue(
 													"month",
 													value
 												)
@@ -580,11 +582,12 @@ const ManageMosqueContributionsPage: React.FC = () => {
 												</SelectGroup>
 											</SelectContent>
 										</Select>
-										{createMultipleContributionsForm.formState.errors.month && (
+										{createMultipleServiceChargesForm.formState.errors
+											.month && (
 											<span className="text-xs text-red-500 font-semibold">
 												{
-													createMultipleContributionsForm.formState.errors
-														.month.message
+													createMultipleServiceChargesForm.formState
+														.errors.month.message
 												}
 											</span>
 										)}
@@ -593,14 +596,14 @@ const ManageMosqueContributionsPage: React.FC = () => {
 										<Label htmlFor="year">Year</Label>
 										<Input
 											type="number"
-											{...createContributionForm.register("year", {
+											{...createServiceChargeForm.register("year", {
 												valueAsNumber: true,
 											})}
 										/>
-										{createContributionForm.formState.errors.year && (
+										{createServiceChargeForm.formState.errors.year && (
 											<span className="text-xs text-red-500 font-semibold">
 												{
-													createContributionForm.formState.errors.year
+													createServiceChargeForm.formState.errors.year
 														.message
 												}
 											</span>
@@ -628,10 +631,10 @@ const ManageMosqueContributionsPage: React.FC = () => {
 									<Button type="submit" disabled={isFormLoading}>
 										{isFormLoading ? "Loading..." : "Create"}
 									</Button>
-									{createMultipleContributionsForm.formState.errors.root && (
+									{createMultipleServiceChargesForm.formState.errors.root && (
 										<span className="text-red-500 text-center">
 											{
-												createMultipleContributionsForm.formState.errors
+												createMultipleServiceChargesForm.formState.errors
 													.root.message
 											}
 										</span>
@@ -641,7 +644,7 @@ const ManageMosqueContributionsPage: React.FC = () => {
 						</Tabs>
 						<Card className="">
 							<CardHeader>
-								<CardTitle className="">Mosque Contribution Table</CardTitle>
+								<CardTitle className="">Service Charge Table</CardTitle>
 								<CardDescription>
 									From {tableFilters.ending} | To {tableFilters.starting}
 								</CardDescription>
@@ -653,7 +656,7 @@ const ManageMosqueContributionsPage: React.FC = () => {
 										Filters
 									</Button>
 									<Button
-										onClick={() => fetchBuildingContributions()}
+										onClick={() => fetchBuildingServiceCharges()}
 										variant={"outline"}
 									>
 										Refresh
@@ -663,13 +666,13 @@ const ManageMosqueContributionsPage: React.FC = () => {
 							<CardContent>
 								<Table>
 									<TableCaption>
-										{contributions.length > 0
-											? `${contributions.length} Mosque Contribution(s)`
+										{serviceCharges.length > 0
+											? `${serviceCharges.length} Service Charge(s)`
 											: "No Data"}
 									</TableCaption>
 									<TableHeader>
 										<TableRow className="bg-muted">
-											<TableHead>Mosque Contribution ID</TableHead>
+											<TableHead>Service Charge ID</TableHead>
 											<TableHead>Flat Number</TableHead>
 											<TableHead>Month</TableHead>
 											<TableHead>Year</TableHead>
@@ -678,28 +681,28 @@ const ManageMosqueContributionsPage: React.FC = () => {
 										</TableRow>
 									</TableHeader>
 									<TableBody>
-										{contributions.map((contribution: any, index) => (
+										{serviceCharges.map((serviceCharge: any, index) => (
 											<TableRow key={index}>
-												<TableCell>{contribution._id}</TableCell>
+												<TableCell>{serviceCharge._id}</TableCell>
 												<TableCell>
-													{contribution.flat.flatNumber}
+													{serviceCharge.flat.flatNumber}
 												</TableCell>
 												<TableCell>
-													{MONTHS[contribution.month - 1]}
+													{MONTHS[serviceCharge.month - 1]}
 												</TableCell>
-												<TableCell>{contribution.year}</TableCell>
+												<TableCell>{serviceCharge.year}</TableCell>
 												<TableCell className="text-right">
-													{contribution.amount.toLocaleString("en-IN")}
+													{serviceCharge.amount.toLocaleString("en-IN")}
 												</TableCell>
 												<TableCell className="flex flex-row justify-center gap-4 font-semibold">
 													<button
 														onClick={() => {
-															setEditingId(contribution._id);
-															editContributionForm.reset({
-																flatId: contribution.flat._id,
-																month: `${contribution.month}`,
-																year: contribution.year,
-																amount: contribution.amount,
+															setEditingId(serviceCharge._id);
+															editServiceChargeForm.reset({
+																flatId: serviceCharge.flat._id,
+																month: `${serviceCharge.month}`,
+																year: serviceCharge.year,
+																amount: serviceCharge.amount,
 															});
 															setIsEditDialogOpen(true);
 														}}
@@ -709,7 +712,7 @@ const ManageMosqueContributionsPage: React.FC = () => {
 													</button>
 													<button
 														onClick={() => {
-															setDeletingId(contribution._id);
+															setDeletingId(serviceCharge._id);
 															setIsDeleteDialogOpen(true);
 														}}
 														className="hover:underline cursor-pointer"
@@ -725,7 +728,7 @@ const ManageMosqueContributionsPage: React.FC = () => {
 									<DialogContent className="">
 										<DialogHeader>
 											<DialogTitle className="">
-												Edit Mosque Contribution
+												Edit Service Charge
 											</DialogTitle>
 											<DialogDescription>
 												Please make sure all information is correct before
@@ -734,9 +737,9 @@ const ManageMosqueContributionsPage: React.FC = () => {
 										</DialogHeader>
 										<form
 											className="flex flex-col gap-6 mt-2"
-											onSubmit={editContributionForm.handleSubmit(
+											onSubmit={editServiceChargeForm.handleSubmit(
 												(formData) => {
-													handleEditContribution(
+													handleEditServiceCharge(
 														editingId as string,
 														formData
 													);
@@ -748,9 +751,9 @@ const ManageMosqueContributionsPage: React.FC = () => {
 											<div className="flex flex-col gap-2">
 												<Label htmlFor="flat">Flat</Label>
 												<Select
-													value={editContributionForm.watch("flatId")}
+													value={editServiceChargeForm.watch("flatId")}
 													onValueChange={(value) =>
-														editContributionForm.setValue(
+														editServiceChargeForm.setValue(
 															"flatId",
 															value
 														)
@@ -774,10 +777,10 @@ const ManageMosqueContributionsPage: React.FC = () => {
 														</SelectGroup>
 													</SelectContent>
 												</Select>
-												{editContributionForm.formState.errors.flatId && (
+												{editServiceChargeForm.formState.errors.flatId && (
 													<span className="text-xs text-red-500 font-semibold">
 														{
-															editContributionForm.formState.errors
+															editServiceChargeForm.formState.errors
 																.flatId.message
 														}
 													</span>
@@ -786,9 +789,9 @@ const ManageMosqueContributionsPage: React.FC = () => {
 											<div className="flex flex-col gap-2">
 												<Label htmlFor="month">Month</Label>
 												<Select
-													value={editContributionForm.watch("month")}
+													value={editServiceChargeForm.watch("month")}
 													onValueChange={(value) =>
-														editContributionForm.setValue(
+														editServiceChargeForm.setValue(
 															"month",
 															value
 														)
@@ -812,10 +815,10 @@ const ManageMosqueContributionsPage: React.FC = () => {
 														</SelectGroup>
 													</SelectContent>
 												</Select>
-												{editContributionForm.formState.errors.month && (
+												{editServiceChargeForm.formState.errors.month && (
 													<span className="text-xs text-red-500 font-semibold">
 														{
-															editContributionForm.formState.errors
+															editServiceChargeForm.formState.errors
 																.month.message
 														}
 													</span>
@@ -825,14 +828,14 @@ const ManageMosqueContributionsPage: React.FC = () => {
 												<Label htmlFor="year">Year</Label>
 												<Input
 													type="number"
-													{...editContributionForm.register("year", {
+													{...editServiceChargeForm.register("year", {
 														valueAsNumber: true,
 													})}
 												/>
-												{editContributionForm.formState.errors.year && (
+												{editServiceChargeForm.formState.errors.year && (
 													<span className="text-xs text-red-500 font-semibold">
 														{
-															editContributionForm.formState.errors
+															editServiceChargeForm.formState.errors
 																.year.message
 														}
 													</span>
@@ -842,14 +845,14 @@ const ManageMosqueContributionsPage: React.FC = () => {
 												<Label htmlFor="amount">Amount</Label>
 												<Input
 													type="number"
-													{...editContributionForm.register("amount", {
+													{...editServiceChargeForm.register("amount", {
 														valueAsNumber: true,
 													})}
 												/>
-												{editContributionForm.formState.errors.amount && (
+												{editServiceChargeForm.formState.errors.amount && (
 													<span className="text-xs text-red-500 font-semibold">
 														{
-															editContributionForm.formState.errors
+															editServiceChargeForm.formState.errors
 																.amount.message
 														}
 													</span>
@@ -859,11 +862,11 @@ const ManageMosqueContributionsPage: React.FC = () => {
 												{isFormLoading ? "Loading..." : "Save Changes"}
 											</Button>
 										</form>
-										{editContributionForm.formState.errors.root && (
+										{editServiceChargeForm.formState.errors.root && (
 											<DialogFooter>
 												<span className="text-red-500 text-center w-full">
 													{
-														editContributionForm.formState.errors.root
+														editServiceChargeForm.formState.errors.root
 															.message
 													}
 												</span>
@@ -878,7 +881,7 @@ const ManageMosqueContributionsPage: React.FC = () => {
 									<DialogContent>
 										<DialogHeader>
 											<DialogTitle className="">
-												Delete mosque contribution?
+												Delete service charge?
 											</DialogTitle>
 											<DialogDescription>
 												Once you delete, this action can't be undone
@@ -895,7 +898,7 @@ const ManageMosqueContributionsPage: React.FC = () => {
 											</DialogClose>
 											<Button
 												onClick={() =>
-													handleDeleteContribution(deletingId as string)
+													handleDeleteServiceCharge(deletingId as string)
 												}
 											>
 												Delete
@@ -954,7 +957,7 @@ const ManageMosqueContributionsPage: React.FC = () => {
 											</DialogClose>
 											<Button
 												onClick={() => {
-													fetchBuildingContributions();
+													fetchBuildingServiceCharges();
 													setIsFilterDialogOpen(false);
 												}}
 											>
@@ -968,7 +971,7 @@ const ManageMosqueContributionsPage: React.FC = () => {
 					</CardContent>
 					<CardFooter>
 						<Button
-							disabled={!contributions || contributions.length === 0}
+							disabled={!serviceCharges || serviceCharges.length === 0}
 							onClick={handleDownloadSpreadsheet}
 						>
 							Download Spreadsheet
@@ -981,4 +984,4 @@ const ManageMosqueContributionsPage: React.FC = () => {
 	);
 };
 
-export default ManageMosqueContributionsPage;
+export default ManageServiceChargesPage;

@@ -1,20 +1,19 @@
 import { Router } from "express";
 import {
 	createContribution,
+	createMultipleContributions,
+	getBuildingContributions,
 	getFlatContributions,
-	deleteContribution,
-	getContributions,
 	updateContribution,
-	getCurrentFlatContribution,
+	deleteContribution,
 } from "../controllers/contribution.controller";
 
 const router = Router();
 
-router.post("/create", createContribution);
-router.post("/upload", () => {});
-router.get("/", getContributions);
+router.post("/", createContribution);
+router.post("/multiple", createMultipleContributions);
+router.get("/building/:buildingId", getBuildingContributions);
 router.get("/flat/:flatId", getFlatContributions);
-router.get("/flat/current/:flatId", getCurrentFlatContribution);
 router.put("/:id", updateContribution);
 router.delete("/:id", deleteContribution);
 

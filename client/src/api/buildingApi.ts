@@ -3,7 +3,6 @@ import api from "@/lib/axios";
 export const fetchBuildingsApi = async () => {
 	try {
 		const response = await api.get("/buildings");
-		// console.log("Buildings fetched successfully:", response.data);
 		return { success: true, data: response.data };
 	} catch (error: any) {
 		console.error("Error fetching buildings:", error.response?.data);

@@ -40,7 +40,7 @@ import {
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
-	DialogTrigger,
+	// DialogTrigger,
 } from "@/components/ui/dialog";
 import { MONTHS, ALLOWED_TYPES } from "@/lib/constants";
 import { z } from "zod";
@@ -50,8 +50,8 @@ import { toast } from "sonner";
 import * as xlsx from "xlsx";
 import HeaderAdmin from "@/components/HeaderAdmin";
 import Footer from "@/components/Footer";
-import { adminAuthVerify } from "@/lib/authVerify";
-import { fetchFlatsApi } from "@/api/flatApi";
+import { adminAuthCheckApi } from "@/api/authApi";
+import { fetchBuildingFlatsApi } from "@/api/flatApi";
 import {
 	fetchBillsApi,
 	createBillApi,
@@ -105,7 +105,7 @@ const ManageBillsPage: React.FC = () => {
 			toast("Failed to fetch bills", {
 				description: response.error || "Some error is preventing bills from being fetched",
 				action: {
-					label: "Okay",
+					label: "OK",
 					onClick: () => {},
 				},
 			});
@@ -113,9 +113,24 @@ const ManageBillsPage: React.FC = () => {
 	};
 
 	useEffect(() => {
-		adminAuthVerify(setIsPageLoading, navigate);
+		const adminAuthCheck = async () => {
+			const response = await adminAuthCheckApi();
+			if (response.success) {
+				setIsPageLoading(false);
+			} else {
+				toast("Unauthorized", {
+					description: "Please sign in again",
+					action: {
+						label: "OK",
+						onClick: () => {},
+					},
+				});
+				navigate("/sign-in");
+			}
+		};
+
 		const fetchFlats = async () => {
-			const response = await fetchFlatsApi();
+			const response = await fetchBuildingFlatsApi("687648153d80b004736bb1d9");
 			if (response.success) {
 				setFlats(response.data);
 			} else {
@@ -123,13 +138,14 @@ const ManageBillsPage: React.FC = () => {
 					description:
 						response.error || "Some error is preventing flats from being fetched",
 					action: {
-						label: "Okay",
+						label: "OK",
 						onClick: () => {},
 					},
 				});
 			}
 		};
 
+		adminAuthCheck();
 		fetchFlats();
 		fetchBills();
 	}, [navigate]);
@@ -168,7 +184,7 @@ const ManageBillsPage: React.FC = () => {
 			toast("Bill has been created", {
 				description: "Check the table for more options",
 				action: {
-					label: "Okay",
+					label: "OK",
 					onClick: () => {},
 				},
 			});
@@ -236,7 +252,7 @@ const ManageBillsPage: React.FC = () => {
 			toast(`${response.data.count} bills have been created`, {
 				description: "Check the table for more options",
 				action: {
-					label: "Okay",
+					label: "OK",
 					onClick: () => {},
 				},
 			});
@@ -258,7 +274,7 @@ const ManageBillsPage: React.FC = () => {
 			toast("Bill has been edited", {
 				description: "Check the table for more options",
 				action: {
-					label: "Okay",
+					label: "OK",
 					onClick: () => {},
 				},
 			});
@@ -279,7 +295,7 @@ const ManageBillsPage: React.FC = () => {
 			toast("Bill has been deleted", {
 				description: "Check the table for more options",
 				action: {
-					label: "Okay",
+					label: "OK",
 					onClick: () => {},
 				},
 			});
@@ -288,7 +304,7 @@ const ManageBillsPage: React.FC = () => {
 			toast("Failed to delete bill", {
 				description: response.error || "Some error is preventing bill from being deleted",
 				action: {
-					label: "Okay",
+					label: "OK",
 					onClick: () => {},
 				},
 			});

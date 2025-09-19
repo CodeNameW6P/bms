@@ -17,12 +17,7 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import HeaderDefault from "@/components/HeaderDefault";
 import Footer from "@/components/Footer";
-import {
-	adminAuthVerifyApi,
-	flatAuthVerifyApi,
-	adminSignInApi,
-	flatSignInApi,
-} from "@/api/authApi";
+import { adminAuthCheckApi, flatAuthCheckApi, adminSignInApi, flatSignInApi } from "@/api/authApi";
 
 const FlatSignInSchema = z.object({
 	flatNumber: z.string().nonempty("Flat number can't be empty"),
@@ -32,7 +27,7 @@ const FlatSignInSchema = z.object({
 export type FlatSignInFormDataType = z.infer<typeof FlatSignInSchema>;
 
 const AdminSignInSchema = z.object({
-	email: z.string().nonempty("Email can't be empty").email("Invalid email address"),
+	email: z.email("Please enter a valid email address").nonempty("Email can't be empty"),
 	password: z.string().nonempty("Password can't be empty"),
 });
 
@@ -41,21 +36,21 @@ export type AdminSignInFormDataType = z.infer<typeof AdminSignInSchema>;
 const SignInPage: React.FC = () => {
 	const navigate = useNavigate();
 	useEffect(() => {
-		const adminAuthVerify = async () => {
-			const response = await adminAuthVerifyApi();
+		const adminAuthCheck = async () => {
+			const response = await adminAuthCheckApi();
 			if (response.success) {
 				navigate("/admin-dashboard");
 			}
 		};
-		const flatAuthVerify = async () => {
-			const response = await flatAuthVerifyApi();
+		const flatAuthCheck = async () => {
+			const response = await flatAuthCheckApi();
 			if (response.success) {
 				navigate("/flat-dashboard");
 			}
 		};
 
-		adminAuthVerify();
-		flatAuthVerify();
+		adminAuthCheck();
+		flatAuthCheck();
 	}, [navigate]);
 
 	const [isFlatSignIn, setIsFlatSignIn] = useState(true);
