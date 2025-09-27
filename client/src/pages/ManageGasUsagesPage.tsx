@@ -95,7 +95,7 @@ type CreateMultipleGasUsagesData = z.infer<typeof CreateMultipleGasUsagesSchema>
 type EditGasUsageData = z.infer<typeof EditGasUsageForm>;
 
 const ManageGasUsagesPage: React.FC = () => {
-	const [isPageLoading, setIsPageLoading] = useState(true);
+	const [_isPageLoading, setIsPageLoading] = useState(true);
 	const [isFormLoading, setIsFormLoading] = useState(false);
 	const [buildings, setBuildings] = useState([]);
 	const [currentBuildingId, setCurrentBuildingId] = useState<string | null>(null);

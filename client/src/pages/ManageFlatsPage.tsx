@@ -62,7 +62,7 @@ const EditFlatSchema = z.object({
 export type EditFlatData = z.infer<typeof EditFlatSchema>;
 
 const ManageFlatsPage: React.FC = () => {
-	const [isPageLoading, setIsPageLoading] = useState(true);
+	const [_isPageLoading, setIsPageLoading] = useState(true);
 	const [isFormLoading, setIsFormLoading] = useState(false);
 	const [buildings, setBuildings] = useState([]);
 	const [currentBuildingId, setCurrentBuildingId] = useState<string | null>(null);

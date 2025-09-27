@@ -51,11 +51,10 @@ import { flatAuthCheckApi } from "@/api/authApi";
 import { fetchFlatGasUsagesApi } from "@/api/gasUsageApi";
 
 const ViewGasUsagesPage: React.FC = () => {
-	const [isPageLoading, setIsPageLoading] = useState(true);
+	const [_isPageLoading, setIsPageLoading] = useState(true);
 	const [flat, setFlat] = useState<any>(null);
 	const [gasUsages, setGasUsages] = useState([]);
 	const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
-	const invoiceRef = useRef<HTMLDivElement>(null);
 	const tableRef = useRef<HTMLTableElement>(null);
 	const currentDate = new Date();
 	const [tableFilters, setTableFilters] = useState({

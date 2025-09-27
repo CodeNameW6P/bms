@@ -82,7 +82,7 @@ export type CreateServiceChargeData = z.infer<typeof CreateServiceChargeSchema>;
 type CreateMultipleServiceChargesData = z.infer<typeof CreateMultipleServiceChargesSchema>;
 
 const ManageServiceChargesPage: React.FC = () => {
-	const [isPageLoading, setIsPageLoading] = useState(true);
+	const [_isPageLoading, setIsPageLoading] = useState(true);
 	const [isFormLoading, setIsFormLoading] = useState(false);
 	const [buildings, setBuildings] = useState([]);
 	const [currentBuildingId, setCurrentBuildingId] = useState<string | null>(null);

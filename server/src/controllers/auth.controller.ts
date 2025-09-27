@@ -98,7 +98,7 @@ export const adminSignOut = (req: Request, res: Response) => {
 		res.clearCookie("token", {
 			httpOnly: true,
 			secure: NODE_ENV === "production",
-			sameSite: "strict",
+			sameSite: NODE_ENV === "production" ? "none" : "lax",
 		})
 			.status(200)
 			.json({ message: "Admin has signed out" });

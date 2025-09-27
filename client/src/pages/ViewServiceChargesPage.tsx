@@ -41,7 +41,7 @@ import { flatAuthCheckApi } from "@/api/authApi";
 import { fetchFlatServiceChargesApi } from "@/api/serviceChargeApi";
 
 const ViewServiceChargesPage: React.FC = () => {
-	const [isPageLoading, setIsPageLoading] = useState(true);
+	const [_isPageLoading, setIsPageLoading] = useState(true);
 	const [flat, setFlat] = useState<any>(null);
 	const [serviceCharges, setServiceCharges] = useState([]);
 	const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);

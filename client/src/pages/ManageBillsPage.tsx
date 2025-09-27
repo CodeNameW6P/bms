@@ -82,7 +82,7 @@ export type CreateBillData = z.infer<typeof CreateBillSchema>;
 type UploadBillData = z.infer<typeof UploadBillSchema>;
 
 const ManageBillsPage: React.FC = () => {
-	const [isPageLoading, setIsPageLoading] = useState(true);
+	const [_isPageLoading, setIsPageLoading] = useState(true);
 	const [isFormLoading, setIsFormLoading] = useState(false);
 	const [flats, setFlats] = useState([]);
 	const [bills, setBills] = useState([]);

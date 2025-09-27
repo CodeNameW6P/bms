@@ -81,7 +81,7 @@ const CreateCylinderPLSchema = z.object({
 export type CreateCylinderPLData = z.infer<typeof CreateCylinderPLSchema>;
 
 const ManageCylinderPLsPage = () => {
-	const [isPageLoading, setIsPageLoading] = useState(true);
+	const [_isPageLoading, setIsPageLoading] = useState(true);
 	const [buildings, setBuildings] = useState([]);
 	const [currentBuildingId, setCurrentBuildingId] = useState<string | null>(null);
 	const [cylinderLogs, setCylinderLogs] = useState([]);

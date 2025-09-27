@@ -82,7 +82,7 @@ export type CreateContributionData = z.infer<typeof CreateContributionSchema>;
 type CreateMultipleContributionsData = z.infer<typeof CreateMultipleContributionsSchema>;
 
 const ManageMosqueContributionsPage: React.FC = () => {
-	const [isPageLoading, setIsPageLoading] = useState(true);
+	const [_isPageLoading, setIsPageLoading] = useState(true);
 	const [isFormLoading, setIsFormLoading] = useState(false);
 	const [buildings, setBuildings] = useState([]);
 	const [currentBuildingId, setCurrentBuildingId] = useState<string | null>(null);

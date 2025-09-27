@@ -2,31 +2,21 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
 	Card,
-	CardAction,
+	// CardAction,
 	CardContent,
 	CardDescription,
-	CardFooter,
+	// CardFooter,
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
 import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-	SelectGroup,
-	SelectLabel,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import {
 	type ChartConfig,
 	ChartContainer,
 	ChartTooltip,
 	ChartTooltipContent,
-	ChartLegend,
-	ChartLegendContent,
+	// ChartLegend,
+	// ChartLegendContent,
 } from "@/components/ui/chart";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import HeaderAdmin from "@/components/HeaderAdmin";
@@ -66,12 +56,12 @@ const totalGasBillChartConfig = {
 } satisfies ChartConfig;
 
 const AdminDashPage: React.FC = () => {
-	const [isPageloading, setIsPageLoading] = useState(true);
+	const [_isPageloading, setIsPageLoading] = useState(true);
 	const [buildings, setBuildings] = useState([]);
 	const [currentBuildingId, setCurrentBuildingId] = useState<string | null>(null);
 	const [monthlySummary, setMonthlySummary] = useState<any>(null);
 	const [chartData, setChartData] = useState<any>(null);
-	const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+	const [currentMonth, _setCurrentMonth] = useState(new Date().getMonth());
 	const navigate = useNavigate();
 
 	const fetchMonthlyBuildingSummary = async () => {

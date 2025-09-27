@@ -77,7 +77,7 @@ const CreateCylinderULSchema = z.object({
 export type CreateCylinderULData = z.infer<typeof CreateCylinderULSchema>;
 
 const ManageCylinderULsPage = () => {
-	const [isPageLoading, setIsPageLoading] = useState(true);
+	const [_isPageLoading, setIsPageLoading] = useState(true);
 	const [buildings, setBuildings] = useState([]);
 	const [currentBuildingId, setCurrentBuildingId] = useState<string | null>(null);
 	const [cylinderLogs, setCylinderLogs] = useState([]);

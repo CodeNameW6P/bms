@@ -1,19 +1,18 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import {
 	Table,
 	TableBody,
-	TableCaption,
+	// TableCaption,
 	TableCell,
-	TableHead,
-	TableHeader,
+	// TableHead,
+	// TableHeader,
 	TableRow,
 } from "@/components/ui/table";
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
 import { useNavigate } from "react-router-dom";
 import {
 	Card,
-	CardAction,
+	// CardAction,
 	CardContent,
 	CardDescription,
 	CardFooter,
@@ -25,8 +24,8 @@ import {
 	ChartContainer,
 	ChartTooltip,
 	ChartTooltipContent,
-	ChartLegend,
-	ChartLegendContent,
+	// ChartLegend,
+	// ChartLegendContent,
 } from "@/components/ui/chart";
 import { toast } from "sonner";
 import HeaderFlat from "@/components/HeaderFlat";
@@ -50,11 +49,11 @@ const billTotalChartConfig = {
 } satisfies ChartConfig;
 
 const FlatDashPage: React.FC = () => {
-	const [isPageloading, setIsPageLoading] = useState(true);
+	const [_isPageloading, setIsPageLoading] = useState(true);
 	const [flat, setFlat] = useState<any>(null);
 	const [monthlySummary, setMonthlySummary] = useState<any>(null);
 	const [chartData, setChartData] = useState<any>(null);
-	const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+	const [currentMonth, _setCurrentMonth] = useState(new Date().getMonth());
 	const navigate = useNavigate();
 
 	const fetchMonthlyFlatSummary = async () => {
