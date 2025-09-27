@@ -40,7 +40,7 @@ export const adminSignUp = async (req: Request, res: Response) => {
 			res.cookie("token", token, {
 				httpOnly: true,
 				secure: NODE_ENV === "production",
-				sameSite: "strict",
+				sameSite: NODE_ENV === "production" ? "none" : "lax",
 				maxAge: 60 * 60 * 1000,
 			})
 				.status(201)
@@ -82,7 +82,7 @@ export const adminSignIn = async (req: Request, res: Response) => {
 		res.cookie("token", token, {
 			httpOnly: true,
 			secure: NODE_ENV === "production",
-			sameSite: "strict",
+			sameSite: NODE_ENV === "production" ? "none" : "lax",
 			maxAge: 60 * 60 * 1000,
 		})
 			.status(200)
@@ -137,7 +137,7 @@ export const flatSignIn = async (req: Request, res: Response) => {
 		res.cookie("token", token, {
 			httpOnly: true,
 			secure: NODE_ENV === "production",
-			sameSite: "strict",
+			sameSite: NODE_ENV === "production" ? "none" : "lax",
 			maxAge: 60 * 60 * 1000,
 		})
 			.status(200)
@@ -153,7 +153,7 @@ export const flatSignOut = (req: Request, res: Response) => {
 		res.clearCookie("token", {
 			httpOnly: true,
 			secure: NODE_ENV === "production",
-			sameSite: "strict",
+			sameSite: NODE_ENV === "production" ? "none" : "lax",
 		})
 			.status(200)
 			.json({ message: "Flat resident has signed out" });
