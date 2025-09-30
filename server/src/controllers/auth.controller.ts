@@ -4,7 +4,7 @@ import Flat from "../models/flat.model";
 import { genSalt, hash, compare } from "bcrypt";
 import { sign } from "jsonwebtoken";
 import { JWT_KEY } from "../config/env";
-import { NODE_ENV } from "../config/env";
+// import { NODE_ENV } from "../config/env";
 
 export const adminSignUp = async (req: Request, res: Response) => {
 	try {
@@ -33,19 +33,18 @@ export const adminSignUp = async (req: Request, res: Response) => {
 			email: email.toLowerCase().trim(),
 			password: hashedPassword,
 		});
-		if (!admin) {
-			res.status(500).json({ message: "Failed to create admin" });
-		} else {
-			const token = sign({ id: admin._id }, JWT_KEY, { expiresIn: "1h" });
-			res.cookie("token", token, {
-				httpOnly: true,
-				secure: NODE_ENV === "production",
-				sameSite: NODE_ENV === "production" ? "none" : "lax",
-				maxAge: 60 * 60 * 1000,
-			})
-				.status(201)
-				.json({ message: "Admin has signed up" });
-		}
+
+		const token = sign({ id: admin._id }, JWT_KEY, { expiresIn: "1h" });
+		res.status(201).json({ message: "Admin has signed up", token });
+
+		// res.cookie("token", token, {
+		// 	httpOnly: true,
+		// 	secure: NODE_ENV === "production",
+		// 	sameSite: NODE_ENV === "production" ? "none" : "lax",
+		// 	maxAge: 60 * 60 * 1000,
+		// })
+		// 	.status(201)
+		// 	.json({ message: "Admin has signed up" });
 	} catch (error: any) {
 		console.error("Error signing admin up:", error.message);
 		res.status(500).json({ message: "Internal server error" });
@@ -79,34 +78,36 @@ export const adminSignIn = async (req: Request, res: Response) => {
 		}
 
 		const token = sign({ id: admin._id }, JWT_KEY, { expiresIn: "1h" });
-		res.cookie("token", token, {
-			httpOnly: true,
-			secure: NODE_ENV === "production",
-			sameSite: NODE_ENV === "production" ? "none" : "lax",
-			maxAge: 60 * 60 * 1000,
-		})
-			.status(200)
-			.json({ message: "Admin has signed in" });
+		res.status(200).json({ message: "Admin has signed in", token });
+
+		// res.cookie("token", token, {
+		// 	httpOnly: true,
+		// 	secure: NODE_ENV === "production",
+		// 	sameSite: NODE_ENV === "production" ? "none" : "lax",
+		// 	maxAge: 60 * 60 * 1000,
+		// })
+		// 	.status(200)
+		// 	.json({ message: "Admin has signed in" });
 	} catch (error: any) {
 		console.error("Error signing admin in:", error.message);
 		res.status(500).json({ message: "Internal server error" });
 	}
 };
 
-export const adminSignOut = (req: Request, res: Response) => {
-	try {
-		res.clearCookie("token", {
-			httpOnly: true,
-			secure: NODE_ENV === "production",
-			sameSite: NODE_ENV === "production" ? "none" : "lax",
-		})
-			.status(200)
-			.json({ message: "Admin has signed out" });
-	} catch (error: any) {
-		console.error("Error signing admin out:", error.message);
-		res.status(500).json({ message: "Internal server error" });
-	}
-};
+// export const adminSignOut = (req: Request, res: Response) => {
+// 	try {
+// 		res.clearCookie("token", {
+// 			httpOnly: true,
+// 			secure: NODE_ENV === "production",
+// 			sameSite: NODE_ENV === "production" ? "none" : "lax",
+// 		})
+// 			.status(200)
+// 			.json({ message: "Admin has signed out" });
+// 	} catch (error: any) {
+// 		console.error("Error signing admin out:", error.message);
+// 		res.status(500).json({ message: "Internal server error" });
+// 	}
+// };
 
 export const flatSignIn = async (req: Request, res: Response) => {
 	try {
@@ -134,31 +135,33 @@ export const flatSignIn = async (req: Request, res: Response) => {
 		}
 
 		const token = sign({ id: flat._id }, JWT_KEY, { expiresIn: "1h" });
-		res.cookie("token", token, {
-			httpOnly: true,
-			secure: NODE_ENV === "production",
-			sameSite: NODE_ENV === "production" ? "none" : "lax",
-			maxAge: 60 * 60 * 1000,
-		})
-			.status(200)
-			.json({ message: "Flat resident has signed in" });
+		res.status(200).json({ message: "Flat resident has signed in", token });
+
+		// res.cookie("token", token, {
+		// 	httpOnly: true,
+		// 	secure: NODE_ENV === "production",
+		// 	sameSite: NODE_ENV === "production" ? "none" : "lax",
+		// 	maxAge: 60 * 60 * 1000,
+		// })
+		// 	.status(200)
+		// 	.json({ message: "Flat resident has signed in" });
 	} catch (error: any) {
 		console.error("Error signing flat resident in:", error.message);
 		res.status(500).json({ message: "Internal server error" });
 	}
 };
 
-export const flatSignOut = (req: Request, res: Response) => {
-	try {
-		res.clearCookie("token", {
-			httpOnly: true,
-			secure: NODE_ENV === "production",
-			sameSite: NODE_ENV === "production" ? "none" : "lax",
-		})
-			.status(200)
-			.json({ message: "Flat resident has signed out" });
-	} catch (error: any) {
-		console.error("Error signing flat resident out:", error.message);
-		res.status(500).json({ message: "Internal server error" });
-	}
-};
+// export const flatSignOut = (req: Request, res: Response) => {
+// 	try {
+// 		res.clearCookie("token", {
+// 			httpOnly: true,
+// 			secure: NODE_ENV === "production",
+// 			sameSite: NODE_ENV === "production" ? "none" : "lax",
+// 		})
+// 			.status(200)
+// 			.json({ message: "Flat resident has signed out" });
+// 	} catch (error: any) {
+// 		console.error("Error signing flat resident out:", error.message);
+// 		res.status(500).json({ message: "Internal server error" });
+// 	}
+// };

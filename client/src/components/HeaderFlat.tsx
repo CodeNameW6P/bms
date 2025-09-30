@@ -1,7 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
-import { flatSignOutApi } from "@/api/authApi";
-import { toast } from "sonner";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -19,21 +17,6 @@ import {
 
 const HeaderFlat: React.FC = () => {
 	const navigate = useNavigate();
-
-	const handleSignOut = async () => {
-		const response = await flatSignOutApi();
-		if (response.success) {
-			navigate("/sign-in");
-		} else {
-			toast("Failed to sign out", {
-				description: response.error || "Please try again",
-				action: {
-					label: "OK",
-					onClick: () => {},
-				},
-			});
-		}
-	};
 
 	return (
 		<>
@@ -96,7 +79,10 @@ const HeaderFlat: React.FC = () => {
 										<DropdownMenuSeparator />
 										<DropdownMenuItem
 											className="font-semibold"
-											onClick={handleSignOut}
+											onClick={() => {
+												localStorage.removeItem("token");
+												navigate("/sign-in");
+											}}
 										>
 											Log Out
 										</DropdownMenuItem>

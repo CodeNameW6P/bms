@@ -5,20 +5,11 @@ import type { FlatSignInFormDataType } from "@/pages/SignInPage";
 export const adminSignInApi = async (data: AdminSignInFormDataType) => {
 	try {
 		const response = await api.post("/auth/admin-sign-in", data);
-		return { success: true, data: response.data };
+		localStorage.setItem("token", response.data?.token || "");
+		return { success: true };
 	} catch (error: any) {
 		console.error("Error signing admin in:", error.response?.data);
 		return { success: false, error: error.response?.data?.message || "Failed to sign in" };
-	}
-};
-
-export const adminSignOutApi = async () => {
-	try {
-		const response = await api.post("/auth/admin-sign-out");
-		return { success: true, data: response.data };
-	} catch (error: any) {
-		console.error("Error signing admin out:", error.response?.data);
-		return { success: false, error: error.response?.data?.message || "Failed to sign out" };
 	}
 };
 
@@ -38,20 +29,11 @@ export const adminAuthCheckApi = async () => {
 export const flatSignInApi = async (data: FlatSignInFormDataType) => {
 	try {
 		const response = await api.post("/auth/flat-sign-in", data);
-		return { success: true, data: response.data };
+		localStorage.setItem("token", response.data?.token || "");
+		return { success: true };
 	} catch (error: any) {
 		console.error("Error signing flat resident in:", error.response?.data);
 		return { success: false, error: error.response?.data?.message || "Failed to sign in" };
-	}
-};
-
-export const flatSignOutApi = async () => {
-	try {
-		const response = await api.post("/auth/flat-sign-out");
-		return { success: true, data: response.data };
-	} catch (error: any) {
-		console.error("Error signing flat resident out:", error.response?.data);
-		return { success: false, error: error.response?.data?.message || "Failed to sign out" };
 	}
 };
 

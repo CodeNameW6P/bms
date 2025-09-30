@@ -3,9 +3,9 @@ import { adminAuthMiddleware, flatAuthMiddleware } from "../middlewares/auth.mid
 import {
 	adminSignUp,
 	adminSignIn,
-	adminSignOut,
+	// adminSignOut,
 	flatSignIn,
-	flatSignOut,
+	// flatSignOut,
 } from "../controllers/auth.controller";
 
 const router = Router();
@@ -13,8 +13,8 @@ const router = Router();
 router.post("/admin-sign-up", adminSignUp);
 router.post("/admin-sign-in", adminSignIn);
 router.post("/flat-sign-in", flatSignIn);
-router.post("/admin-sign-out", adminSignOut);
-router.post("/flat-sign-out", flatSignOut);
+// router.post("/admin-sign-out", adminSignOut);
+// router.post("/flat-sign-out", flatSignOut);
 router.get("/admin-auth-check", adminAuthMiddleware, (req: Request, res: Response) => {
 	res.status(200).json({ message: "Admin is authneticated", admin: (req as any).admin });
 });

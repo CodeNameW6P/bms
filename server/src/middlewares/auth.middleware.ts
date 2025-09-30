@@ -12,7 +12,13 @@ export const adminAuthMiddleware = async (req: Request, res: Response, next: Nex
 			return;
 		}
 
-		const decoded = verify(token, JWT_KEY!) as { id: string };
+		if (!JWT_KEY) {
+			console.error("JWT_KEY is not defined in the environment variables");
+			res.status(500).json({ message: "Internal server error" });
+			return;
+		}
+
+		const decoded = verify(token, JWT_KEY) as { id: string };
 		const admin = await Admin.findById(decoded.id).select("-password");
 		if (!admin) {
 			res.status(404).json({ message: "Couldn't find admin" });
@@ -35,7 +41,13 @@ export const flatAuthMiddleware = async (req: Request, res: Response, next: Next
 			return;
 		}
 
-		const decoded = verify(token, JWT_KEY!) as { id: string };
+		if (!JWT_KEY) {
+			console.error("JWT_KEY is not defined in the environment variables");
+			res.status(500).json({ message: "Internal server error" });
+			return;
+		}
+
+		const decoded = verify(token, JWT_KEY) as { id: string };
 		const flat = await Flat.findById(decoded.id).populate("building");
 		if (!flat) {
 			res.status(404).json({ message: "Couldn't find flat" });

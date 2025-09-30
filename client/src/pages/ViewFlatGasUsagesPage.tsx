@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, use } from "react";
 import {
 	Card,
 	CardAction,
@@ -41,8 +41,6 @@ import {
 	DialogTitle,
 	// DialogTrigger,
 } from "@/components/ui/dialog";
-import jsPDF from "jspdf";
-import { toPng } from "html-to-image";
 import { MONTHS } from "@/lib/constants";
 import { toast } from "sonner";
 import HeaderFlat from "@/components/HeaderFlat";
@@ -55,7 +53,8 @@ const ViewGasUsagesPage: React.FC = () => {
 	const [flat, setFlat] = useState<any>(null);
 	const [gasUsages, setGasUsages] = useState([]);
 	const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
-	const tableRef = useRef<HTMLTableElement>(null);
+	const invoiceRef = useRef<HTMLDivElement>(null);
+	const [selectedGasUsage, setSelectedGasUsage] = useState<any>(null);
 	const currentDate = new Date();
 	const [tableFilters, setTableFilters] = useState({
 		starting: `${currentDate.getFullYear()}-01`,
@@ -112,81 +111,6 @@ const ViewGasUsagesPage: React.FC = () => {
 		}
 	}, [flat]);
 
-	const handleDownloadPDF = async () => {
-		if (!tableRef.current) return;
-
-		try {
-			const imgData = await toPng(tableRef.current, { cacheBust: true });
-
-			const pdf = new jsPDF("p", "mm", "a4");
-			const pdfWidth = pdf.internal.pageSize.getWidth();
-			const pdfHeight = pdf.internal.pageSize.getHeight();
-
-			const img = document.createElement("img");
-			img.src = imgData;
-			img.onload = () => {
-				const imgWidth = pdfWidth;
-				const imgHeight = (img.height * imgWidth) / img.width;
-
-				let heightLeft = imgHeight;
-				let position = 0;
-
-				pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-				heightLeft -= pdfHeight;
-
-				while (heightLeft > 0) {
-					position = heightLeft - imgHeight;
-					pdf.addPage();
-					pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-					heightLeft -= pdfHeight;
-				}
-
-				pdf.save("gas-usage-table.pdf");
-			};
-		} catch (err) {
-			console.error("PDF export error:", err);
-			toast("Error exporting PDF", {
-				description: "Something went wrong while generating the PDF.",
-			});
-		}
-	};
-
-	const generateInvoicePDF = (record: any) => {
-		const pdf = new jsPDF("p", "mm", "a4");
-
-		pdf.setFontSize(18);
-		pdf.text("Gas Usage Invoice", 105, 20, { align: "center" });
-
-		pdf.setFontSize(12);
-		pdf.text(`Flat: ${record.flat.flatNumber}`, 20, 35);
-		pdf.text(`Period: ${record.month}/${record.year}`, 20, 42);
-
-		const startY = 55;
-		const rowHeight = 10;
-		let y = startY;
-
-		const rows = [
-			["Unit Readout", record.unitReadout.toString()],
-			["Units Used", record.unitsUsed.toString()],
-			["Unit Cost", record.unitCost.toLocaleString("en-IN")],
-			["Total Bill", record.billTotal.toLocaleString("en-IN")],
-			["Paid", record.billPaid.toLocaleString("en-IN")],
-			["Status", record.status ? "Paid" : "Unpaid"],
-		];
-
-		pdf.setFontSize(11);
-		rows.forEach(([label, value]) => {
-			pdf.text(label, 20, y);
-			pdf.text(value, 150, y, { align: "right" });
-			y += rowHeight;
-		});
-
-		pdf.setFontSize(10);
-		pdf.text("This is a system-generated invoice.", 105, 280, { align: "center" });
-
-		pdf.save(`invoice-${record.month}-${record.year}.pdf`);
-	};
-
 	return (
 		<main className="flex flex-col min-h-screen gap-6">
 			<HeaderFlat />
@@ -216,7 +140,7 @@ const ViewGasUsagesPage: React.FC = () => {
 							</CardAction>
 						</CardHeader>
 						<CardContent className="">
-							<Table ref={tableRef}>
+							<Table>
 								<TableCaption>
 									{gasUsages.length > 0
 										? `${gasUsages.length} Gas Usage Record(s)`
@@ -283,7 +207,7 @@ const ViewGasUsagesPage: React.FC = () => {
 											<TableCell className="flex flex-row justify-center gap-4 font-semibold">
 												<button
 													disabled={gasUsage.status}
-													onClick={() => generateInvoicePDF(gasUsage)}
+													onClick={() => {}}
 													className="hover:underline cursor-pointer"
 												>
 													Print
@@ -380,11 +304,45 @@ const ViewGasUsagesPage: React.FC = () => {
 						<CardFooter>
 							<Button
 								disabled={!gasUsages || gasUsages.length === 0}
-								onClick={handleDownloadPDF}
+								onClick={() => {}}
 							>
 								Download PDF
 							</Button>
 						</CardFooter>
+					</Card>
+					<Card ref={invoiceRef}>
+						<CardHeader>
+							<CardTitle>Gas Usage Record Invoice</CardTitle>
+							<CardDescription>{flat?.flatNumber} Flat</CardDescription>
+						</CardHeader>
+						<CardContent>
+							<Table>
+								<TableBody>
+									<TableRow>
+										<TableCell>Gas Usage Record ID</TableCell>
+										<TableCell>{selectedGasUsage?._id || "N/A"}</TableCell>
+									</TableRow>
+									<TableRow>
+										<TableCell>Month</TableCell>
+										<TableCell>
+											{selectedGasUsage
+												? MONTHS[selectedGasUsage.month - 1]
+												: "N/A"}
+										</TableCell>
+									</TableRow>
+									<TableRow>
+										<TableCell>Year</TableCell>
+										<TableCell>{selectedGasUsage?.year || "N/A"}</TableCell>
+									</TableRow>
+									<TableRow>
+										<TableCell>Unit Readout</TableCell>
+										<TableCell>
+											{selectedGasUsage?.unitReadout || "N/A"}
+										</TableCell>
+									</TableRow>
+								</TableBody>
+							</Table>
+						</CardContent>
 					</Card>
 				</CardContent>
 			</Card>
