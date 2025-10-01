@@ -23,7 +23,9 @@ const HeaderFlat: React.FC = () => {
 			<header className="bg-black text-white p-4">
 				<div className="flex container mx-auto items-center justify-between">
 					<Link to="/flat-dashboard">
-						<h1 className="text-2xl font-semibold">Navana City Dale Portal</h1>
+						<h1 className="text-2xl font-semibold">
+							Navana City Dale Building 4 Portal
+						</h1>
 					</Link>
 					<nav>
 						<ul className="flex gap-4 items-center">

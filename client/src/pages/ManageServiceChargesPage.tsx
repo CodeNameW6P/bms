@@ -266,14 +266,19 @@ const ManageServiceChargesPage: React.FC = () => {
 		const sheetData = xlsx.utils.sheet_to_json(worksheet);
 
 		const data = sheetData.map((entry: any, index) => {
-			if (!entry.flatId || !entry.flatNumber || !entry.amount) {
+			if (
+				!entry["Flat ID"] ||
+				!entry["Flat Number"] ||
+				entry["Service Charge"] === undefined
+			) {
 				setFileInputError(`Row ${index + 1} has missing data`);
 				setIsFormLoading(false);
 				return;
 			}
 			if (
 				!flats.some(
-					(flat: any) => flat._id === entry.flatId && flat.flatNumber === entry.flatNumber
+					(flat: any) =>
+						flat._id === entry["Flat ID"] && flat.flatNumber === entry["Flat Number"]
 				)
 			) {
 				setFileInputError(`Row ${index + 1} has incorrect data`);
@@ -282,10 +287,10 @@ const ManageServiceChargesPage: React.FC = () => {
 			}
 
 			return {
-				flatId: entry.flatId,
+				flatId: entry["Flat ID"],
 				month: formData.month,
 				year: formData.year,
-				amount: entry.amount || 0,
+				amount: entry["Service Charge"] || 0,
 			};
 		});
 

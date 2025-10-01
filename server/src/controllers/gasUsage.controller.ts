@@ -177,7 +177,7 @@ export const getBuildingGasUsages = async (req: Request, res: Response) => {
 		const flatIds = await Flat.find({ building: buildingId }).select("_id");
 		const gasUsages = await GasUsage.find({ flat: { $in: flatIds }, ...rangeQuery })
 			.populate("flat")
-			.sort({ year: -1, month: -1 });
+			.sort({ year: -1, month: -1, "flat.flatNumber": 1 });
 
 		res.status(200).json(gasUsages);
 	} catch (error: any) {

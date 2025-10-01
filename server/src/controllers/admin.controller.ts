@@ -3,8 +3,8 @@ import Admin from "../models/admin.model";
 
 export const createAdmin = async (req: Request, res: Response) => {
 	try {
-		const { username, email, password } = req.body;
-		if (!username || !email || !password) {
+		const { email, password } = req.body;
+		if (!email || !password) {
 			res.status(400).json({ message: "Parameters are missing" });
 			return;
 		}
@@ -15,7 +15,7 @@ export const createAdmin = async (req: Request, res: Response) => {
 			return;
 		}
 
-		const newAdmin = await Admin.create({ username, email, password });
+		const newAdmin = await Admin.create({ email, password });
 		res.status(201).json(newAdmin);
 	} catch (error: any) {
 		console.error("Error creating admin:", error.message);

@@ -3,7 +3,8 @@ const Footer: React.FC = () => {
 		<>
 			<footer className="flex bg-black p-4 justify-center items-center">
 				<span className="text-sm text-white">
-					&copy; {new Date().getFullYear()} Navana City Dale Portal. All rights reserved.
+					&copy; {new Date().getFullYear()} Navana City Dale Building 4 Portal. All rights
+					reserved.
 				</span>
 			</footer>
 		</>

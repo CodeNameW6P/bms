@@ -17,7 +17,7 @@ export const getMonthlyBuildingSummary = async (req: Request, res: Response) => 
 		}
 
 		const currentDate = new Date();
-		const selectedMonth = month ? parseInt(month as string, 10) : currentDate.getMonth() + 1;
+		const selectedMonth = month ? parseInt(month as string, 10) : currentDate.getMonth();
 		const selectedYear = year ? parseInt(year as string, 10) : currentDate.getFullYear();
 
 		if (isNaN(selectedMonth) || isNaN(selectedYear)) {

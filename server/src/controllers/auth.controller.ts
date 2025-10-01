@@ -8,8 +8,8 @@ import { JWT_KEY } from "../config/env";
 
 export const adminSignUp = async (req: Request, res: Response) => {
 	try {
-		const { username, email, password } = req.body;
-		if (!username || !email || !password) {
+		const { email, password } = req.body;
+		if (!email || !password) {
 			res.status(400).json({ message: "Parameters are missing" });
 			return;
 		}
@@ -29,7 +29,6 @@ export const adminSignUp = async (req: Request, res: Response) => {
 		const salt = await genSalt(8);
 		const hashedPassword = await hash(password, salt);
 		const admin = await Admin.create({
-			username,
 			email: email.toLowerCase().trim(),
 			password: hashedPassword,
 		});

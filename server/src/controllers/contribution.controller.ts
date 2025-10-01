@@ -115,7 +115,7 @@ export const getBuildingContributions = async (req: Request, res: Response) => {
 		const flatIds = await Flat.find({ building: buildingId }).select("_id");
 		const contributions = await Contribution.find({ flat: { $in: flatIds }, ...rangeQuery })
 			.populate("flat")
-			.sort({ year: -1, month: -1 });
+			.sort({ year: -1, month: -1, "flat.flatNumber": 1 });
 
 		res.status(200).json(contributions);
 	} catch (error: any) {
