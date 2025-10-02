@@ -472,7 +472,7 @@ const ManageCylinderULsPage = () => {
 									<DialogContent>
 										<DialogHeader>
 											<DialogTitle className="">
-												Edit Cylinder Purchase Log
+												Edit Cylinder Usage Log
 											</DialogTitle>
 											<DialogDescription>
 												Please make sure all information is correct before

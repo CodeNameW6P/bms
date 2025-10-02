@@ -40,7 +40,7 @@ export const createGasUsage = async (req: Request, res: Response) => {
 			return;
 		}
 
-		const unitsUsed = unitReadout - prevUnitReadout;
+		const unitsUsed = Math.round((unitReadout - prevUnitReadout) * 100) / 100;
 		const billTotal = Math.ceil(unitsUsed * unitCost);
 		const billCapped = Math.min(billPaid, billTotal);
 
@@ -113,7 +113,7 @@ export const createMultipleGasUsages = async (req: Request, res: Response) => {
 				continue;
 			}
 
-			const unitsUsed = unitReadout - prevUnitReadout;
+			const unitsUsed = Math.round((unitReadout - prevUnitReadout) * 100) / 100;
 			const billTotal = Math.ceil(unitsUsed * unitCost);
 			const billCapped = Math.min(billPaid, billTotal);
 
@@ -283,7 +283,7 @@ export const updateGasUsage = async (req: Request, res: Response) => {
 			return;
 		}
 
-		const unitsUsed = unitReadout - prevUnitReadout;
+		const unitsUsed = Math.round((unitReadout - prevUnitReadout) * 100) / 100;
 		const billTotal = Math.ceil(unitsUsed * unitCost);
 		const billCapped = Math.min(billPaid, billTotal);
 
@@ -378,7 +378,7 @@ export const updateMultipleGasUsages = async (req: Request, res: Response) => {
 				continue;
 			}
 
-			const unitsUsed = unitReadout - prevUnitReadout;
+			const unitsUsed = Math.round((unitReadout - prevUnitReadout) * 100) / 100;
 			const billTotal = Math.ceil(unitsUsed * unitCost);
 			const billCapped = Math.min(billPaid, billTotal);
 

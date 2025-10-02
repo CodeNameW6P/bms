@@ -310,7 +310,7 @@ const ViewGasUsagesPage: React.FC = () => {
 							</Button>
 						</CardFooter>
 					</Card>
-					<Card ref={invoiceRef}>
+					<Card className="hidden" ref={invoiceRef}>
 						<CardHeader>
 							<CardTitle>Gas Usage Record Invoice</CardTitle>
 							<CardDescription>{flat?.flatNumber} Flat</CardDescription>

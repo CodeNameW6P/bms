@@ -53,7 +53,9 @@ const FlatDashPage: React.FC = () => {
 	const [flat, setFlat] = useState<any>(null);
 	const [monthlySummary, setMonthlySummary] = useState<any>(null);
 	const [chartData, setChartData] = useState<any>(null);
-	const [currentMonth, _setCurrentMonth] = useState(new Date().getMonth());
+	const [currentMonth, _setCurrentMonth] = useState(
+		new Date().getMonth() - 1 === -1 ? 12 : new Date().getMonth() - 1
+	);
 	const navigate = useNavigate();
 
 	const fetchMonthlyFlatSummary = async () => {

@@ -528,6 +528,7 @@ const ManageGasUsagesPage: React.FC = () => {
 										<Label htmlFor="unitReadout">Unit Readout</Label>
 										<Input
 											type="number"
+											step="0.01"
 											{...createGasUsageForm.register("unitReadout", {
 												valueAsNumber: true,
 											})}
@@ -783,7 +784,7 @@ const ManageGasUsagesPage: React.FC = () => {
 																year: gasUsage.year,
 																unitReadout: gasUsage.unitReadout,
 																unitCost: gasUsage.unitCost,
-																billPaid: gasUsage.billPaid,
+																billPaid: gasUsage.billTotal,
 															});
 															setIsEditDialogOpen(true);
 														}}
@@ -913,6 +914,7 @@ const ManageGasUsagesPage: React.FC = () => {
 												<Label htmlFor="unitReadout">Unit Readout</Label>
 												<Input
 													type="number"
+													step="0.01"
 													{...editGasUsageForm.register("unitReadout", {
 														valueAsNumber: true,
 													})}
