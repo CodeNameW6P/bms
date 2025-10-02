@@ -348,6 +348,7 @@ const ManageCylinderPLsPage = () => {
 								<Label htmlFor="cylindersPurchased">Cylinders Purchased</Label>
 								<Input
 									type="number"
+									step="0.01"
 									{...createCylinderPLForm.register("cylindersPurchased", {
 										valueAsNumber: true,
 									})}
@@ -374,6 +375,7 @@ const ManageCylinderPLsPage = () => {
 								<Label htmlFor="cost">Cost</Label>
 								<Input
 									type="number"
+									step="0.01"
 									{...createCylinderPLForm.register("cost", {
 										valueAsNumber: true,
 									})}
@@ -388,6 +390,7 @@ const ManageCylinderPLsPage = () => {
 								<Label htmlFor="otherCost">Other Cost</Label>
 								<Input
 									type="number"
+									step="0.01"
 									{...createCylinderPLForm.register("otherCost", {
 										valueAsNumber: true,
 									})}
@@ -623,6 +626,7 @@ const ManageCylinderPLsPage = () => {
 												</Label>
 												<Input
 													type="number"
+													step="0.01"
 													{...editCylinderPLForm.register(
 														"cylindersPurchased",
 														{
@@ -659,6 +663,7 @@ const ManageCylinderPLsPage = () => {
 												<Label htmlFor="cost">Cost</Label>
 												<Input
 													type="number"
+													step="0.01"
 													{...editCylinderPLForm.register("cost", {
 														valueAsNumber: true,
 													})}
@@ -676,6 +681,7 @@ const ManageCylinderPLsPage = () => {
 												<Label htmlFor="otherCost">Other Cost</Label>
 												<Input
 													type="number"
+													step="0.01"
 													{...editCylinderPLForm.register("otherCost", {
 														valueAsNumber: true,
 													})}

@@ -344,6 +344,7 @@ const ManageCylinderULsPage = () => {
 								<Label htmlFor="cylindersPurchased">Cylinders Used</Label>
 								<Input
 									type="number"
+									step="0.01"
 									{...createCylinderULForm.register("cylindersUsed", {
 										valueAsNumber: true,
 									})}
@@ -361,6 +362,7 @@ const ManageCylinderULsPage = () => {
 								<Label htmlFor="cost">Unit Cost</Label>
 								<Input
 									type="number"
+									step="0.01"
 									{...createCylinderULForm.register("unitCost", {
 										valueAsNumber: true,
 									})}
@@ -586,10 +588,11 @@ const ManageCylinderULsPage = () => {
 											</div>
 											<div className="flex flex-col gap-2">
 												<Label htmlFor="cylindersPurchased">
-													Cylinders Purchased
+													Cylinders Used
 												</Label>
 												<Input
 													type="number"
+													step="0.01"
 													{...editCylinderULForm.register(
 														"cylindersUsed",
 														{
@@ -608,9 +611,10 @@ const ManageCylinderULsPage = () => {
 												)}
 											</div>
 											<div className="flex flex-col gap-2">
-												<Label htmlFor="cost">Cost</Label>
+												<Label htmlFor="cost">Unit cost</Label>
 												<Input
 													type="number"
+													step="0.01"
 													{...editCylinderULForm.register("unitCost", {
 														valueAsNumber: true,
 													})}
