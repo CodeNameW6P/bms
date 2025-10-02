@@ -110,11 +110,24 @@ const ManageGasUsagesPage: React.FC = () => {
 	const [deletingId, setDeletingId] = useState<string | null>(null);
 	const currentDate = new Date();
 	const [tableFilters, setTableFilters] = useState({
-		starting: currentDate.toISOString().slice(0, 7),
-		ending: currentDate.toISOString().slice(0, 7),
+		starting: "",
+		ending: "",
 		status: "all",
 	});
 	const navigate = useNavigate();
+
+	const getPreviousMonth = () => {
+		let year = currentDate.getFullYear();
+		let month = currentDate.getMonth();
+
+		if (month === 0) {
+			month = 12;
+			year -= 1;
+		}
+
+		const formattedMonth = String(month).padStart(2, "0");
+		return `${year}-${formattedMonth}`;
+	};
 
 	const fetchBuildingGasUsages = async () => {
 		const response = await fetchBuildingGasUsagesApi(
@@ -138,6 +151,12 @@ const ManageGasUsagesPage: React.FC = () => {
 	};
 
 	useEffect(() => {
+		setTableFilters((prev) => ({
+			...prev,
+			starting: getPreviousMonth(),
+			ending: getPreviousMonth(),
+		}));
+
 		const adminAuthCheck = async () => {
 			const response = await adminAuthCheckApi();
 			if (response.success) {
